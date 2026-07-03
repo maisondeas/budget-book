@@ -223,10 +223,16 @@ button{font-family:inherit;}
 .tx-amount.expense{color:var(--red);}
 .tx-amount.income{color:var(--ink);}
 .tx-amount.transfer{color:var(--ink-soft);}
-.tx-del{
+/* タップで編集できる行 */
+.tx-row-editable{cursor:pointer;}
+.tx-row-editable:active{background:rgba(242,199,68,0.14);}
+.tx-edit-chevron{
   flex:0 0 auto;
-  background:none;border:none;color:var(--ink-soft);
-  font-size:16px;padding:4px 2px 4px 6px;cursor:pointer;
+  color:var(--ink-soft);
+  font-size:20px;
+  line-height:1;
+  padding-left:2px;
+  margin-left:2px;
 }
 .empty-msg{padding:34px 16px;text-align:center;color:var(--ink-soft);font-size:13.5px;}
 
@@ -364,8 +370,12 @@ optgroup{font-weight:700;}
 
 /* ===== Accounts management ===== */
 .account-list{display:flex;flex-direction:column;gap:6px;margin-top:10px;}
-.account-item{display:flex;justify-content:space-between;align-items:center;padding:9px 11px;background:#FFFDF6;border:1px solid var(--line);border-radius:8px;font-size:13.5px;}
+.account-item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 11px;background:#FFFDF6;border:1px solid var(--line);border-radius:8px;font-size:13.5px;}
+.account-item .account-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .account-item .type-badge{font-size:10.5px;color:var(--ink-soft);margin-left:6px;}
+.account-actions{display:flex;align-items:center;gap:12px;flex:0 0 auto;}
+.account-used{margin:0;color:var(--ink-soft);}
+.edit-link{color:var(--accent-dark);font-size:12px;cursor:pointer;text-decoration:underline;background:none;border:none;padding:0;font-weight:700;}
 .del-link{color:var(--red);font-size:12px;cursor:pointer;text-decoration:underline;background:none;border:none;padding:0;font-weight:700;}
 
 /* ===== Bottom nav + FAB ===== */
@@ -537,6 +547,7 @@ optgroup{font-weight:700;}
       </span>
       すべての期間を表示する
     </label>
+    <p class="hint" style="margin:0 16px 10px;">記録をタップすると内容を編集・削除できます。</p>
     <div class="tx-list" id="hist-list"></div>
     <div class="empty-msg" id="hist-empty" style="display:none;">この期間の記録はありません。</div>
   </section>
@@ -683,10 +694,11 @@ optgroup{font-weight:700;}
 <div class="sheet" id="entry-sheet">
   <div class="sheet-handle"></div>
   <div class="sheet-header">
-    <h2>仕訳を入力</h2>
+    <h2 id="entry-sheet-title">仕訳を入力</h2>
     <button class="sheet-close" id="entry-close">×</button>
   </div>
   <form id="entry-form">
+    <input type="hidden" id="f-edit-id" value="">
     <div class="form-row">
       <label for="f-date">日付</label>
       <input type="date" id="f-date" required>
@@ -708,7 +720,8 @@ optgroup{font-weight:700;}
       <input type="text" id="f-memo" placeholder="例:スーパーで食材購入">
     </div>
     <p class="hint">借方=貸方が常に自動的に成立する形式です(1仕訳=借方1科目・貸方1科目のため)。</p>
-    <button type="submit" class="btn" style="margin-top:6px;">この仕訳を記帳する</button>
+    <button type="submit" class="btn" id="entry-submit-btn" style="margin-top:6px;">この仕訳を記帳する</button>
+    <button type="button" class="btn danger" id="entry-delete-btn" style="margin-top:10px;display:none;">この仕訳を削除する</button>
   </form>
 </div>
 
@@ -866,21 +879,62 @@ optgroup{font-weight:700;}
     if(currentPage==="settings") renderAccountList();
   }
 
-  // ================= 仕訳入力シート =================
+  // ================= 仕訳入力シート(新規・編集 兼用) =================
   var backdrop = document.getElementById("entry-backdrop");
   var sheet = document.getElementById("entry-sheet");
-  function openSheet(){
+
+  // 新規記帳モードでシートを開く
+  function openSheetNew(){
+    document.getElementById("f-edit-id").value = "";
+    document.getElementById("entry-sheet-title").textContent = "仕訳を入力";
+    document.getElementById("entry-submit-btn").textContent = "この仕訳を記帳する";
+    document.getElementById("entry-delete-btn").style.display = "none";
+    refreshAllAccountSelects();
     document.getElementById("f-date").value = todayStr();
+    document.getElementById("f-amount").value = "";
+    document.getElementById("f-memo").value = "";
     backdrop.classList.add("show");
     sheet.classList.add("show");
   }
+
+  // 既存の仕訳を編集モードでシートに読み込んで開く
+  function openSheetEdit(id){
+    var tx = null;
+    for(var i=0;i<state.transactions.length;i++){ if(state.transactions[i].id===id){ tx = state.transactions[i]; break; } }
+    if(!tx) return;
+    document.getElementById("f-edit-id").value = tx.id;
+    document.getElementById("entry-sheet-title").textContent = "仕訳を編集";
+    document.getElementById("entry-submit-btn").textContent = "変更を保存する";
+    document.getElementById("entry-delete-btn").style.display = "block";
+    // 選択中の科目を反映した状態でプルダウンを作り直す
+    populateAccountSelect(document.getElementById("f-debit"), tx.debit);
+    populateAccountSelect(document.getElementById("f-credit"), tx.credit);
+    document.getElementById("f-date").value = tx.date;
+    document.getElementById("f-amount").value = tx.amount;
+    document.getElementById("f-memo").value = tx.memo || "";
+    backdrop.classList.add("show");
+    sheet.classList.add("show");
+  }
+
   function closeSheet(){
     backdrop.classList.remove("show");
     sheet.classList.remove("show");
   }
-  document.getElementById("fab-add").addEventListener("click", openSheet);
+  document.getElementById("fab-add").addEventListener("click", openSheetNew);
   document.getElementById("entry-close").addEventListener("click", closeSheet);
   backdrop.addEventListener("click", closeSheet);
+
+  // 編集モードでの削除ボタン
+  document.getElementById("entry-delete-btn").addEventListener("click", function(){
+    var id = document.getElementById("f-edit-id").value;
+    if(!id) return;
+    if(!confirm("この仕訳を削除しますか?")) return;
+    state.transactions = state.transactions.filter(function(t){ return t.id!==id; });
+    saveTx();
+    closeSheet();
+    toast("削除しました");
+    refreshCurrentPage();
+  });
 
   function populateAccountSelect(sel, selectedId){
     sel.innerHTML = "";
@@ -905,6 +959,7 @@ optgroup{font-weight:700;}
 
   document.getElementById("entry-form").addEventListener("submit", function(e){
     e.preventDefault();
+    var editId = document.getElementById("f-edit-id").value;
     var date = document.getElementById("f-date").value;
     var debit = document.getElementById("f-debit").value;
     var credit = document.getElementById("f-credit").value;
@@ -914,20 +969,40 @@ optgroup{font-weight:700;}
     if(!date || !debit || !credit || !amount || amount<=0){ toast("すべての必須項目を入力してください"); return; }
     if(debit === credit){ toast("借方科目と貸方科目は別の科目を選んでください"); return; }
 
-    state.transactions.push({ id: uid(), date: date, debit: debit, credit: credit, amount: amount, memo: memo });
-    saveTx();
-    document.getElementById("f-amount").value = "";
-    document.getElementById("f-memo").value = "";
-    closeSheet();
-    toast("記帳しました");
-    refreshCurrentPage();
+    if(editId){
+      // 編集:該当の仕訳を書き換える
+      for(var i=0;i<state.transactions.length;i++){
+        if(state.transactions[i].id===editId){
+          state.transactions[i].date = date;
+          state.transactions[i].debit = debit;
+          state.transactions[i].credit = credit;
+          state.transactions[i].amount = amount;
+          state.transactions[i].memo = memo;
+          break;
+        }
+      }
+      saveTx();
+      closeSheet();
+      toast("変更を保存しました");
+      refreshCurrentPage();
+    }else{
+      // 新規記帳
+      state.transactions.push({ id: uid(), date: date, debit: debit, credit: credit, amount: amount, memo: memo });
+      saveTx();
+      document.getElementById("f-amount").value = "";
+      document.getElementById("f-memo").value = "";
+      closeSheet();
+      toast("記帳しました");
+      refreshCurrentPage();
+    }
   });
 
   // ================= 共通:取引1件のHTML =================
-  function txRowHtml(tx, showDelete){
+  // mode: "home"(タップ不可の閲覧用) / "history"(タップで編集)
+  function txRowHtml(tx, editable){
     var d = describeTx(tx);
     var amountText = d.kind==="transfer" ? fmtYen(tx.amount) : (d.sign>0? "+"+fmtYen(tx.amount) : "-"+fmtYen(tx.amount));
-    return "<div class='tx-row'>"+
+    return "<div class='tx-row"+(editable?" tx-row-editable":"")+"'"+(editable?" data-id='"+tx.id+"'":"")+">"+
       "<div class='tx-date'>"+formatShortDate(tx.date)+"</div>"+
       "<div class='tx-icon'>"+d.icon+"</div>"+
       "<div class='tx-main'>"+
@@ -935,7 +1010,7 @@ optgroup{font-weight:700;}
         (tx.memo ? "<div class='tx-memo'>"+escapeHtml(tx.memo)+"</div>" : "")+
       "</div>"+
       "<div class='tx-amount "+d.kind+" font-num'>"+amountText+"</div>"+
-      (showDelete ? "<button class='tx-del' data-id='"+tx.id+"'>🗑</button>" : "")+
+      (editable ? "<span class='tx-edit-chevron'>›</span>" : "")+
     "</div>";
   }
 
@@ -988,9 +1063,16 @@ optgroup{font-weight:700;}
       listEl.innerHTML = ""; listEl.style.display="none"; emptyEl.style.display="block";
     }else{
       listEl.style.display="grid"; emptyEl.style.display="none";
-      listEl.innerHTML = recent.map(function(tx){ return txRowHtml(tx, false); }).join("");
+      listEl.innerHTML = recent.map(function(tx){ return txRowHtml(tx, true); }).join("");
     }
   }
+  // ホームの記録をタップしたら編集シートを開く
+  document.getElementById("home-recent-list").addEventListener("click", function(e){
+    var row = e.target.closest(".tx-row-editable");
+    if(!row) return;
+    var id = row.dataset.id;
+    if(id) openSheetEdit(id);
+  });
 
   // ================= グラフ描画(外部ライブラリなし・自前でCanvasに描く) =================
   // 高解像度画面でもぼやけないよう、実ピクセル数を調整して描画する
@@ -1204,14 +1286,10 @@ optgroup{font-weight:700;}
     }
   }
   document.getElementById("hist-list").addEventListener("click", function(e){
-    var btn = e.target.closest(".tx-del");
-    if(!btn) return;
-    if(!confirm("この仕訳を削除しますか?")) return;
-    var id = btn.dataset.id;
-    state.transactions = state.transactions.filter(function(t){ return t.id!==id; });
-    saveTx();
-    renderHistory();
-    toast("削除しました");
+    var row = e.target.closest(".tx-row-editable");
+    if(!row) return;
+    var id = row.dataset.id;
+    if(id) openSheetEdit(id);
   });
 
   // ================= 分析:貸借対照表 =================
@@ -1363,23 +1441,49 @@ optgroup{font-weight:700;}
       var used = state.transactions.some(function(t){ return t.debit===a.id || t.credit===a.id; });
       var item = document.createElement("div");
       item.className = "account-item";
+      var actions =
+        "<button class='edit-link' data-id='"+a.id+"'>編集</button>"+
+        (used ? "<span class='hint account-used'>使用中</span>"
+              : "<button class='del-link' data-id='"+a.id+"'>削除</button>");
       item.innerHTML =
-        "<span>"+escapeHtml(a.name)+"<span class='type-badge'>"+TYPE_LABEL[a.type]+"</span></span>"+
-        (used ? "<span class='hint' style='margin:0;'>使用中</span>" : "<button class='del-link' data-id='"+a.id+"'>削除</button>");
+        "<span class='account-name'>"+escapeHtml(a.name)+"<span class='type-badge'>"+TYPE_LABEL[a.type]+"</span></span>"+
+        "<span class='account-actions'>"+actions+"</span>";
       wrap.appendChild(item);
     });
   }
   document.getElementById("account-list").addEventListener("click", function(e){
-    var btn = e.target.closest(".del-link");
-    if(!btn) return;
-    var id = btn.dataset.id;
-    var acc = accountById(id);
-    if(!confirm("科目「"+(acc?acc.name:"")+"」を削除しますか?")) return;
-    state.accounts = state.accounts.filter(function(a){ return a.id!==id; });
-    saveAccounts();
-    renderAccountList();
-    refreshAllAccountSelects();
-    toast("科目を削除しました");
+    // 編集(名前のみ変更)
+    var editBtn = e.target.closest(".edit-link");
+    if(editBtn){
+      var eid = editBtn.dataset.id;
+      var eacc = accountById(eid);
+      if(!eacc) return;
+      var newName = prompt("科目名を入力してください(分類「"+TYPE_LABEL[eacc.type]+"」は変わりません)", eacc.name);
+      if(newName===null) return; // キャンセル
+      newName = newName.trim();
+      if(!newName){ toast("科目名を入力してください"); return; }
+      var dup = state.accounts.some(function(a){ return a.name===newName && a.id!==eid; });
+      if(dup){ toast("同じ名前の科目が既にあります"); return; }
+      eacc.name = newName;
+      saveAccounts();
+      renderAccountList();
+      refreshAllAccountSelects();
+      refreshCurrentPage();
+      toast("科目名を変更しました");
+      return;
+    }
+    // 削除(使用中は不可)
+    var delBtn = e.target.closest(".del-link");
+    if(delBtn){
+      var id = delBtn.dataset.id;
+      var acc = accountById(id);
+      if(!confirm("科目「"+(acc?acc.name:"")+"」を削除しますか?")) return;
+      state.accounts = state.accounts.filter(function(a){ return a.id!==id; });
+      saveAccounts();
+      renderAccountList();
+      refreshAllAccountSelects();
+      toast("科目を削除しました");
+    }
   });
 
   // ================= 設定:バックアップ =================
