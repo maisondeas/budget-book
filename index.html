@@ -242,6 +242,11 @@ button{font-family:inherit;}
   margin:0 16px 12px;
   font-size:13px;color:var(--ink-soft);
 }
+.hist-filter{
+  margin:0 16px 12px;
+  display:flex;flex-direction:column;gap:5px;
+}
+.hist-filter label{font-size:12.5px;color:var(--ink-soft);font-weight:700;}
 .switch{
   position:relative;width:38px;height:22px;flex:0 0 38px;
 }
@@ -370,9 +375,22 @@ optgroup{font-weight:700;}
 
 /* ===== Accounts management ===== */
 .account-list{display:flex;flex-direction:column;gap:6px;margin-top:10px;}
+.account-group-heading{
+  font-size:11.5px;font-weight:700;color:var(--ink-soft);
+  padding:10px 2px 2px;
+}
+.account-group-heading:first-child{padding-top:0;}
 .account-item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 11px;background:#FFFDF6;border:1px solid var(--line);border-radius:8px;font-size:13.5px;}
-.account-item .account-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.account-item .type-badge{font-size:10.5px;color:var(--ink-soft);margin-left:6px;}
+.account-item .account-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.reorder-btns{display:flex;flex-direction:column;gap:1px;flex:0 0 auto;}
+.reorder-btn{
+  width:22px;height:16px;
+  border:none;background:none;
+  color:var(--ink-soft);font-size:9px;line-height:1;
+  cursor:pointer;padding:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.reorder-btn:disabled{opacity:0.25;cursor:default;}
 .account-actions{display:flex;align-items:center;gap:12px;flex:0 0 auto;}
 .account-used{margin:0;color:var(--ink-soft);}
 .edit-link{color:var(--accent-dark);font-size:12px;cursor:pointer;text-decoration:underline;background:none;border:none;padding:0;font-weight:700;}
@@ -534,19 +552,37 @@ optgroup{font-weight:700;}
   <!-- ===================== 履歴 ===================== -->
   <section class="page" id="page-history">
     <h1 class="page-title">履歴</h1>
-    <div class="month-nav">
+
+    <div class="hist-filter">
+      <label for="hist-period-mode">表示期間</label>
+      <select id="hist-period-mode">
+        <option value="month">月ごと</option>
+        <option value="range">期間を指定する</option>
+        <option value="all">すべての期間</option>
+      </select>
+    </div>
+
+    <div class="month-nav" id="hist-month-nav">
       <button class="month-nav-btn" id="hist-prev">‹</button>
       <div class="month-label" id="hist-month-label">2026年7月</div>
       <button class="month-nav-btn" id="hist-next">›</button>
     </div>
-    <label class="hist-toggle">
-      <span class="switch">
-        <input type="checkbox" id="hist-showall">
-        <span class="track"></span>
-        <span class="thumb"></span>
-      </span>
-      すべての期間を表示する
-    </label>
+
+    <div class="filter-row" id="hist-range-row" style="display:none;padding:0 16px;margin-bottom:14px;">
+      <div class="form-row">
+        <label for="hist-range-from">開始日</label>
+        <input type="date" id="hist-range-from">
+      </div>
+      <div class="form-row">
+        <label for="hist-range-to">終了日</label>
+        <input type="date" id="hist-range-to">
+      </div>
+    </div>
+
+    <div class="hist-filter">
+      <label for="hist-account">勘定科目でしぼり込む</label>
+      <select id="hist-account"></select>
+    </div>
     <p class="hint" style="margin:0 16px 10px;">記録をタップすると内容を編集・削除できます。</p>
     <div class="tx-list" id="hist-list"></div>
     <div class="empty-msg" id="hist-empty" style="display:none;">この期間の記録はありません。</div>
@@ -835,7 +871,7 @@ optgroup{font-weight:700;}
     if(c && c.type==="revenue"){
       return {kind:"income", icon:iconFor(c), title:c? c.name : "(削除済科目)", sign:1};
     }
-    return {kind:"transfer", icon:"🔁", title:(d?d.name:"(削除済)")+" → "+(c?c.name:"(削除済)"), sign:0};
+    return {kind:"transfer", icon:"🔁", title:(d?d.name:"(削除済)")+"／"+(c?c.name:"(削除済)"), sign:0};
   }
 
   // ---------- balance calculation ----------
@@ -1252,7 +1288,8 @@ optgroup{font-weight:700;}
   // ================= 履歴 =================
   var histYear = (new Date()).getFullYear();
   var histMonth = (new Date()).getMonth()+1;
-  var histShowAll = false;
+  var histPeriodMode = "month"; // "month" | "range" | "all"
+  var histAccountId = ""; // "" = すべての科目
 
   document.getElementById("hist-prev").addEventListener("click", function(){ shiftHistMonth(-1); });
   document.getElementById("hist-next").addEventListener("click", function(){ shiftHistMonth(1); });
@@ -1261,17 +1298,75 @@ optgroup{font-weight:700;}
     histYear = d.getFullYear(); histMonth = d.getMonth()+1;
     renderHistory();
   }
-  document.getElementById("hist-showall").addEventListener("change", function(e){
-    histShowAll = e.target.checked;
-    document.querySelector("#page-history .month-nav").style.display = histShowAll ? "none" : "flex";
+
+  // 表示期間モードの切り替え(月ごと / 期間を指定する / すべての期間)
+  var histPeriodModeSelect = document.getElementById("hist-period-mode");
+  var histRangeFrom = document.getElementById("hist-range-from");
+  var histRangeTo = document.getElementById("hist-range-to");
+  histPeriodModeSelect.addEventListener("change", function(e){
+    histPeriodMode = e.target.value;
+    document.getElementById("hist-month-nav").style.display = (histPeriodMode==="month") ? "flex" : "none";
+    document.getElementById("hist-range-row").style.display = (histPeriodMode==="range") ? "flex" : "none";
+    if(histPeriodMode==="range" && !histRangeFrom.value && !histRangeTo.value){
+      // 初回は当月の範囲を初期値として入れておく(0件表示を避けるため)
+      var mk = histYear+"-"+pad2(histMonth);
+      var lastDay = new Date(histYear, histMonth, 0).getDate();
+      histRangeFrom.value = mk+"-01";
+      histRangeTo.value = mk+"-"+pad2(lastDay);
+    }
+    renderHistory();
+  });
+  histRangeFrom.addEventListener("change", renderHistory);
+  histRangeTo.addEventListener("change", renderHistory);
+
+  // 勘定科目の絞り込みプルダウンの中身を作る(先頭に「すべての科目」)
+  var histAccountSelect = document.getElementById("hist-account");
+  function populateHistAccountSelect(){
+    var prev = histAccountId;
+    histAccountSelect.innerHTML = "";
+    var all = document.createElement("option");
+    all.value = ""; all.textContent = "すべての科目";
+    histAccountSelect.appendChild(all);
+    ["asset","liability","equity","revenue","expense"].forEach(function(type){
+      var listByType = accountsByType(type);
+      if(listByType.length===0) return;
+      var og = document.createElement("optgroup");
+      og.label = TYPE_LABEL[type];
+      listByType.forEach(function(a){
+        var opt = document.createElement("option");
+        opt.value = a.id; opt.textContent = a.name;
+        og.appendChild(opt);
+      });
+      histAccountSelect.appendChild(og);
+    });
+    // 以前選んでいた科目がまだ存在すれば選択を保つ
+    var stillExists = prev==="" || state.accounts.some(function(a){ return a.id===prev; });
+    histAccountSelect.value = stillExists ? prev : "";
+    histAccountId = histAccountSelect.value;
+  }
+  histAccountSelect.addEventListener("change", function(e){
+    histAccountId = e.target.value;
     renderHistory();
   });
 
   function renderHistory(){
     document.getElementById("hist-month-label").textContent = histYear+"年"+histMonth+"月";
     var monthKey = histYear+"-"+pad2(histMonth);
+    var fromDate = histRangeFrom.value;
+    var toDate = histRangeTo.value;
+
     var list = state.transactions.filter(function(t){
-      return histShowAll ? true : t.date.slice(0,7)===monthKey;
+      // 期間でしぼり込む(モードに応じて条件を切り替える)
+      if(histPeriodMode==="month"){
+        if(t.date.slice(0,7)!==monthKey) return false;
+      }else if(histPeriodMode==="range"){
+        if(fromDate && t.date < fromDate) return false;
+        if(toDate && t.date > toDate) return false;
+      }
+      // "all" のときは期間による絞り込みなし
+      // 勘定科目でしぼり込む(借方または貸方に含まれる仕訳のみ)
+      if(histAccountId && t.debit!==histAccountId && t.credit!==histAccountId) return false;
+      return true;
     }).sort(function(a,b){
       return a.date < b.date ? 1 : (a.date > b.date ? -1 : (a.id < b.id ? 1 : -1));
     });
@@ -1280,6 +1375,7 @@ optgroup{font-weight:700;}
     var emptyEl = document.getElementById("hist-empty");
     if(list.length===0){
       listEl.innerHTML = ""; listEl.style.display="none"; emptyEl.style.display="block";
+      emptyEl.textContent = histAccountId ? "この条件に合う記録はありません。" : "この期間の記録はありません。";
     }else{
       listEl.style.display="block"; emptyEl.style.display="none";
       listEl.innerHTML = list.map(function(tx){ return txRowHtml(tx, true); }).join("");
@@ -1431,27 +1527,75 @@ optgroup{font-weight:700;}
     renderAccountList();
     refreshAllAccountSelects();
     populatePeriodSelectors();
+    populateHistAccountSelect();
     toast("科目を追加しました");
   });
 
   function renderAccountList(){
     var wrap = document.getElementById("account-list");
     wrap.innerHTML = "";
-    state.accounts.forEach(function(a){
-      var used = state.transactions.some(function(t){ return t.debit===a.id || t.credit===a.id; });
-      var item = document.createElement("div");
-      item.className = "account-item";
-      var actions =
-        "<button class='edit-link' data-id='"+a.id+"'>編集</button>"+
-        (used ? "<span class='hint account-used'>使用中</span>"
-              : "<button class='del-link' data-id='"+a.id+"'>削除</button>");
-      item.innerHTML =
-        "<span class='account-name'>"+escapeHtml(a.name)+"<span class='type-badge'>"+TYPE_LABEL[a.type]+"</span></span>"+
-        "<span class='account-actions'>"+actions+"</span>";
-      wrap.appendChild(item);
+    // 種類ごとに見出しを付けてグループ表示する(並び替えは同じ種類の中だけで行う)
+    ["asset","liability","equity","revenue","expense"].forEach(function(type){
+      var listByType = accountsByType(type);
+      if(listByType.length===0) return;
+
+      var heading = document.createElement("div");
+      heading.className = "account-group-heading";
+      heading.textContent = TYPE_LABEL[type];
+      wrap.appendChild(heading);
+
+      listByType.forEach(function(a, idxInType){
+        var used = state.transactions.some(function(t){ return t.debit===a.id || t.credit===a.id; });
+        var item = document.createElement("div");
+        item.className = "account-item";
+        var isFirst = idxInType===0;
+        var isLast = idxInType===listByType.length-1;
+        var reorderBtns =
+          "<button class='reorder-btn' data-id='"+a.id+"' data-dir='up' "+(isFirst?"disabled":"")+">▲</button>"+
+          "<button class='reorder-btn' data-id='"+a.id+"' data-dir='down' "+(isLast?"disabled":"")+">▼</button>";
+        var actions =
+          "<button class='edit-link' data-id='"+a.id+"'>編集</button>"+
+          (used ? "<span class='hint account-used'>使用中</span>"
+                : "<button class='del-link' data-id='"+a.id+"'>削除</button>");
+        item.innerHTML =
+          "<span class='reorder-btns'>"+reorderBtns+"</span>"+
+          "<span class='account-name'>"+escapeHtml(a.name)+"</span>"+
+          "<span class='account-actions'>"+actions+"</span>";
+        wrap.appendChild(item);
+      });
     });
   }
+
+  // 勘定科目の並び替え:同じ種類(資産/負債/純資産/収益/費用)の中で、隣同士を入れ替える
+  function moveAccount(id, dir){
+    var acc = accountById(id);
+    if(!acc) return;
+    // 同じ種類の科目だけを、元の配列上の位置(インデックス)付きで取り出す
+    var sameType = [];
+    state.accounts.forEach(function(a, i){ if(a.type===acc.type) sameType.push(i); });
+    var posInType = sameType.findIndex(function(i){ return state.accounts[i].id===id; });
+    var targetPosInType = dir==="up" ? posInType-1 : posInType+1;
+    if(targetPosInType<0 || targetPosInType>=sameType.length) return; // 端では何もしない
+
+    var idxA = sameType[posInType];
+    var idxB = sameType[targetPosInType];
+    var tmp = state.accounts[idxA];
+    state.accounts[idxA] = state.accounts[idxB];
+    state.accounts[idxB] = tmp;
+
+    saveAccounts();
+    renderAccountList();
+    refreshAllAccountSelects();
+    populateHistAccountSelect();
+  }
+
   document.getElementById("account-list").addEventListener("click", function(e){
+    // 並び替え
+    var reorderBtn = e.target.closest(".reorder-btn");
+    if(reorderBtn && !reorderBtn.disabled){
+      moveAccount(reorderBtn.dataset.id, reorderBtn.dataset.dir);
+      return;
+    }
     // 編集(名前のみ変更)
     var editBtn = e.target.closest(".edit-link");
     if(editBtn){
@@ -1468,6 +1612,7 @@ optgroup{font-weight:700;}
       saveAccounts();
       renderAccountList();
       refreshAllAccountSelects();
+      populateHistAccountSelect();
       refreshCurrentPage();
       toast("科目名を変更しました");
       return;
@@ -1482,6 +1627,7 @@ optgroup{font-weight:700;}
       saveAccounts();
       renderAccountList();
       refreshAllAccountSelects();
+      populateHistAccountSelect();
       toast("科目を削除しました");
     }
   });
@@ -1551,6 +1697,7 @@ optgroup{font-weight:700;}
   loadState();
   refreshAllAccountSelects();
   populatePeriodSelectors();
+  populateHistAccountSelect();
   updatePlModeVisibility();
   renderHome();
   renderHistory();
