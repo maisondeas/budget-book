@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>複式家計簿</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#4FAE52">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -37,7 +43,7 @@ body{
 button{font-family:inherit;}
 
 .app{
-  max-width:480px;
+  max-width:1120px;
   margin:0 auto;
   min-height:100vh;
   position:relative;
@@ -86,12 +92,22 @@ button{font-family:inherit;}
 }
 
 /* ===== Home: balance card ===== */
-.balance-card{
-  margin:4px 16px 12px;
-  background:linear-gradient(165deg, var(--yellow-card) 0%, var(--yellow-card-2) 100%);
-  border-radius:22px;
-  padding:22px 22px 24px;
+/* ===== 上段カードのグリッド(画面幅で1〜3列に変化) ===== */
+.home-top-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:14px;
+  padding:4px 16px 16px;
+}
+.top-card{
+  border-radius:20px;
   box-shadow:var(--shadow);
+}
+.balance-card{
+  background:linear-gradient(165deg, var(--yellow-card) 0%, var(--yellow-card-2) 100%);
+  padding:20px 20px 18px;
+  display:flex;
+  flex-direction:column;
 }
 .balance-label{
   font-size:13px;
@@ -101,7 +117,7 @@ button{font-family:inherit;}
   margin-bottom:6px;
 }
 .balance-amount{
-  font-size:34px;
+  font-size:32px;
   font-weight:900;
   text-align:center;
   color:#3E2F08;
@@ -112,6 +128,7 @@ button{font-family:inherit;}
   background:rgba(255,255,255,0.55);
   border-radius:20px;
   overflow:hidden;
+  margin-bottom:16px;
 }
 .balance-bar-fill{
   height:100%;
@@ -120,31 +137,58 @@ button{font-family:inherit;}
   width:0%;
   transition:width .3s ease;
 }
-
 .stat-pair{
-  margin:0 16px 18px;
-  background:var(--card);
-  border-radius:18px;
-  box-shadow:var(--shadow);
+  margin-top:auto;
+  background:rgba(255,255,255,0.6);
+  border-radius:14px;
   display:flex;
   overflow:hidden;
 }
-.stat-pair > div{
-  flex:1;
-  padding:16px 10px;
-  text-align:center;
-}
-.stat-pair > div + div{border-left:1px solid var(--line);}
-.stat-pair .stat-label{font-size:12.5px;color:var(--ink-soft);font-weight:700;margin-bottom:6px;}
-.stat-pair .stat-value{font-size:18px;font-weight:700;}
+.stat-pair > div{flex:1;padding:12px 8px;text-align:center;}
+.stat-pair > div + div{border-left:1px solid rgba(122,94,16,0.18);}
+.stat-pair .stat-label{font-size:12px;color:#7A5E10;font-weight:700;margin-bottom:4px;}
+.stat-pair .stat-value{font-size:17px;font-weight:700;}
 .stat-value.expense{color:var(--red);}
 .stat-value.income{color:var(--ink);}
+
+/* ===== グラフカード ===== */
+.chart-card{
+  background:var(--card);
+  padding:16px 16px 18px;
+  display:flex;
+  flex-direction:column;
+}
+.chart-title{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:12px;}
+.chart-body{flex:1;display:flex;align-items:center;justify-content:center;min-height:180px;}
+.chart-body canvas{max-width:100%;height:auto;}
+.donut-body{flex-direction:column;gap:12px;}
+.donut-legend{width:100%;display:flex;flex-direction:column;gap:5px;}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink);}
+.legend-dot{width:10px;height:10px;border-radius:3px;flex:0 0 10px;}
+.legend-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.legend-val{font-weight:700;font-family:'Space Mono', monospace;font-size:11.5px;}
+.chart-empty{color:var(--ink-soft);font-size:13px;text-align:center;}
 
 .section-heading{
   font-size:14.5px;
   font-weight:700;
   color:var(--ink);
   padding:2px 20px 10px;
+}
+
+/* ===== 最近の記録(画面幅で1〜3列に変化) ===== */
+.tx-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px 14px;
+  padding:0 16px;
+}
+/* グリッド表示のときは各行をカード状に */
+.tx-grid .tx-row{
+  background:var(--card);
+  border-radius:14px;
+  box-shadow:var(--shadow);
+  border-bottom:none;
 }
 
 /* ===== Transaction rows ===== */
@@ -229,6 +273,7 @@ button{font-family:inherit;}
 label{font-size:12.5px;color:var(--ink-soft);font-weight:700;}
 input[type="text"], input[type="date"], input[type="number"], select, textarea{
   font-size:16px;
+  line-height:1.4;
   padding:11px 12px;
   border:1.5px solid var(--line);
   border-radius:10px;
@@ -236,6 +281,33 @@ input[type="text"], input[type="date"], input[type="number"], select, textarea{
   color:var(--ink);
   width:100%;
   min-width:0;
+  -webkit-appearance:none;
+  appearance:none;
+}
+/* iPhoneのSafariで日付欄が縦に膨らむのを防ぎ、文字を上下中央にそろえる */
+input[type="date"]{
+  height:44px;
+  min-height:44px;
+  padding-top:0;
+  padding-bottom:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  -webkit-appearance:none;
+  appearance:none;
+}
+input[type="date"]::-webkit-date-and-time-value{
+  text-align:center;
+  margin:0;
+}
+/* プルダウンは矢印マークを自前で表示し、日付欄と高さを揃える */
+select{
+  height:44px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23C9971F' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 14px center;
+  padding-right:34px;
 }
 input:focus, select:focus, textarea:focus{
   outline:none;
@@ -299,13 +371,18 @@ optgroup{font-weight:700;}
 /* ===== Bottom nav + FAB ===== */
 .bottombar{
   position:fixed;left:0;right:0;bottom:0;
-  max-width:480px;margin:0 auto;
   background:var(--card);
   box-shadow:0 -4px 18px rgba(62,54,35,0.10);
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr 1fr;
+  display:flex;
+  justify-content:center;
   padding:8px 4px calc(8px + env(safe-area-inset-bottom));
   z-index:40;
+}
+.bottombar-inner{
+  width:100%;
+  max-width:560px;
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr 1fr;
 }
 .nav-btn{
   border:none;background:transparent;
@@ -367,6 +444,30 @@ optgroup{font-weight:700;}
   white-space:nowrap;
 }
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ==========================================================
+   レスポンシブ:画面が広いほど列を増やす
+   ========================================================== */
+
+/* 中くらいの画面(タブレット縦向きなど)= 2列 */
+@media(min-width:640px){
+  .home-top-grid{grid-template-columns:1fr 1fr;}
+  /* 支出内訳カードは2列目まで使わず1列目に置き、残高カードと並べる */
+  .tx-grid{grid-template-columns:1fr 1fr;}
+  .page-title{padding-left:20px;}
+  .month-nav{padding-top:18px;}
+  /* 分析・設定は中央寄せの読みやすい幅に */
+  #page-analysis .segmented,
+  #page-analysis .card,
+  #page-settings .card{max-width:640px;margin-left:auto;margin-right:auto;}
+}
+
+/* 広い画面(タブレット横向き・PC)= 上段3列、記録3列 */
+@media(min-width:960px){
+  .home-top-grid{grid-template-columns:1.2fr 1fr 1fr;}
+  .tx-grid{grid-template-columns:1fr 1fr 1fr;}
+  .month-nav{max-width:100%;}
+}
 </style>
 </head>
 <body>
@@ -381,25 +482,42 @@ optgroup{font-weight:700;}
       <button class="month-nav-btn" id="home-next">›</button>
     </div>
 
-    <div class="balance-card">
-      <div class="balance-label">今月の収支</div>
-      <div class="balance-amount font-num" id="home-balance">¥0</div>
-      <div class="balance-bar-track"><div class="balance-bar-fill" id="home-bar-fill"></div></div>
-    </div>
-
-    <div class="stat-pair">
-      <div>
-        <div class="stat-label">支出</div>
-        <div class="stat-value expense font-num" id="home-expense">¥0</div>
+    <!-- 上段:残高カード / 週間支出グラフ / 支出内訳グラフ -->
+    <div class="home-top-grid">
+      <div class="top-card balance-card">
+        <div class="balance-label">今月の収支</div>
+        <div class="balance-amount font-num" id="home-balance">¥0</div>
+        <div class="balance-bar-track"><div class="balance-bar-fill" id="home-bar-fill"></div></div>
+        <div class="stat-pair">
+          <div>
+            <div class="stat-label">支出</div>
+            <div class="stat-value expense font-num" id="home-expense">¥0</div>
+          </div>
+          <div>
+            <div class="stat-label">収入</div>
+            <div class="stat-value income font-num" id="home-income">¥0</div>
+          </div>
+        </div>
       </div>
-      <div>
-        <div class="stat-label">収入</div>
-        <div class="stat-value income font-num" id="home-income">¥0</div>
+
+      <div class="top-card chart-card">
+        <div class="chart-title">週間支出</div>
+        <div class="chart-body">
+          <canvas id="weekly-chart" width="300" height="180"></canvas>
+        </div>
+      </div>
+
+      <div class="top-card chart-card">
+        <div class="chart-title">支出内訳</div>
+        <div class="chart-body donut-body">
+          <canvas id="donut-chart" width="200" height="200"></canvas>
+          <div class="donut-legend" id="donut-legend"></div>
+        </div>
       </div>
     </div>
 
     <div class="section-heading">最近の記録</div>
-    <div class="tx-list" id="home-recent-list"></div>
+    <div class="tx-grid" id="home-recent-list"></div>
     <div class="empty-msg" id="home-recent-empty" style="display:none;">まだ記録がありません。右下の + から記帳しましょう。</div>
   </section>
 
@@ -549,10 +667,12 @@ optgroup{font-weight:700;}
 
   <!-- ===================== 下部ナビ + 追加ボタン ===================== -->
   <nav class="bottombar">
-    <button class="nav-btn active" data-page="home"><span class="ic">🏠</span><span>ホーム</span></button>
-    <button class="nav-btn" data-page="history"><span class="ic">🕘</span><span>履歴</span></button>
-    <button class="nav-btn" data-page="analysis"><span class="ic">📊</span><span>分析</span></button>
-    <button class="nav-btn" data-page="settings"><span class="ic">⚙️</span><span>設定</span></button>
+    <div class="bottombar-inner">
+      <button class="nav-btn active" data-page="home"><span class="ic">🏠</span><span>ホーム</span></button>
+      <button class="nav-btn" data-page="history"><span class="ic">🕘</span><span>履歴</span></button>
+      <button class="nav-btn" data-page="analysis"><span class="ic">📊</span><span>分析</span></button>
+      <button class="nav-btn" data-page="settings"><span class="ic">⚙️</span><span>設定</span></button>
+    </div>
   </nav>
   <button class="fab" id="fab-add" aria-label="仕訳を追加">+</button>
 
@@ -853,19 +973,198 @@ optgroup{font-weight:700;}
     fill.style.width = pct + "%";
     fill.style.background = balance>=0 ? "#B9860A" : "#C4544A";
 
-    // 最近の記録(全期間から新しい順に8件)
+    // グラフ2種を描画(その月のデータを使う)
+    drawWeeklyChart(monthTx);
+    drawDonutChart(monthTx);
+
+    // 最近の記録(全期間から新しい順に9件)
     var recent = state.transactions.slice().sort(function(a,b){
       return a.date < b.date ? 1 : (a.date > b.date ? -1 : (a.id < b.id ? 1 : -1));
-    }).slice(0, 8);
+    }).slice(0, 9);
 
     var listEl = document.getElementById("home-recent-list");
     var emptyEl = document.getElementById("home-recent-empty");
     if(recent.length===0){
       listEl.innerHTML = ""; listEl.style.display="none"; emptyEl.style.display="block";
     }else{
-      listEl.style.display="block"; emptyEl.style.display="none";
+      listEl.style.display="grid"; emptyEl.style.display="none";
       listEl.innerHTML = recent.map(function(tx){ return txRowHtml(tx, false); }).join("");
     }
+  }
+
+  // ================= グラフ描画(外部ライブラリなし・自前でCanvasに描く) =================
+  // 高解像度画面でもぼやけないよう、実ピクセル数を調整して描画する
+  function setupCanvas(canvas, cssW, cssH){
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = cssW * dpr;
+    canvas.height = cssH * dpr;
+    canvas.style.width = cssW + "px";
+    canvas.style.height = cssH + "px";
+    var ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cssW, cssH);
+    return ctx;
+  }
+
+  // 週間支出:選択中の月を、日曜始まりの週ごとにまとめて棒グラフにする
+  function drawWeeklyChart(monthTx){
+    var canvas = document.getElementById("weekly-chart");
+    if(!canvas) return;
+    var cssW = 300, cssH = 180;
+    var ctx = setupCanvas(canvas, cssW, cssH);
+
+    // その月の日ごとの支出を集計
+    var expenseByDate = {};
+    monthTx.forEach(function(tx){
+      var d = describeTx(tx);
+      if(d.kind==="expense"){
+        expenseByDate[tx.date] = (expenseByDate[tx.date]||0) + tx.amount;
+      }
+    });
+
+    // 月内を「週」に分割(1〜7日, 8〜14日, ...)
+    var daysInMonth = new Date(homeYear, homeMonth, 0).getDate();
+    var weeks = [];
+    for(var start=1; start<=daysInMonth; start+=7){
+      var end = Math.min(start+6, daysInMonth);
+      var sum = 0;
+      for(var day=start; day<=end; day++){
+        var key = homeYear+"-"+pad2(homeMonth)+"-"+pad2(day);
+        sum += expenseByDate[key] || 0;
+      }
+      weeks.push({ label: start+"–"+end, value: sum });
+    }
+
+    var maxVal = 0;
+    weeks.forEach(function(w){ if(w.value>maxVal) maxVal=w.value; });
+
+    if(maxVal===0){
+      ctx.fillStyle = "#B7A97F";
+      ctx.font = "13px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("この月の支出はまだありません", cssW/2, cssH/2);
+      return;
+    }
+
+    var padL = 8, padR = 8, padTop = 10, padBottom = 24;
+    var chartW = cssW - padL - padR;
+    var chartH = cssH - padTop - padBottom;
+    var n = weeks.length;
+    var gap = 10;
+    var barW = (chartW - gap*(n-1)) / n;
+    var colors = ["#F2C744","#E9B84A","#DCA94F","#CF9A54"];
+
+    weeks.forEach(function(w, i){
+      var x = padL + i*(barW+gap);
+      var h = maxVal>0 ? (w.value/maxVal)*chartH : 0;
+      var y = padTop + (chartH - h);
+      // 棒(角丸)
+      ctx.fillStyle = colors[i % colors.length];
+      roundRectPath(ctx, x, y, barW, h, 6);
+      ctx.fill();
+      // 週ラベル
+      ctx.fillStyle = "#8B7F5E";
+      ctx.font = "10px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(w.label, x + barW/2, cssH - 8);
+    });
+  }
+
+  function roundRectPath(ctx, x, y, w, h, r){
+    if(h < 0.5){ h = 0.5; }
+    if(r > h) r = h;
+    if(r > w/2) r = w/2;
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.lineTo(x+w-r, y);
+    ctx.arcTo(x+w, y, x+w, y+r, r);
+    ctx.lineTo(x+w, y+h);
+    ctx.lineTo(x, y+h);
+    ctx.lineTo(x, y+r);
+    ctx.arcTo(x, y, x+r, y, r);
+    ctx.closePath();
+  }
+
+  // 支出内訳:費用科目ごとに集計してドーナツ円グラフ+凡例
+  var DONUT_COLORS = ["#F2C744","#E48F6A","#7FB3D5","#88C999","#B39DDB","#F6A5C0","#F0C05A","#9FD8CB","#E0A96D","#C9C15A","#8DA9C4","#D98880"];
+
+  function drawDonutChart(monthTx){
+    var canvas = document.getElementById("donut-chart");
+    var legendEl = document.getElementById("donut-legend");
+    if(!canvas || !legendEl) return;
+    var cssW = 200, cssH = 200;
+    var ctx = setupCanvas(canvas, cssW, cssH);
+
+    // 費用科目ごとに集計
+    var byAccount = {};
+    monthTx.forEach(function(tx){
+      var d = accountById(tx.debit);
+      if(d && d.type==="expense"){
+        byAccount[d.id] = (byAccount[d.id]||0) + tx.amount;
+      }
+    });
+    var items = Object.keys(byAccount).map(function(id){
+      var a = accountById(id);
+      return { name: a ? a.name : "(削除済)", value: byAccount[id] };
+    }).sort(function(a,b){ return b.value - a.value; });
+
+    var total = items.reduce(function(s,it){ return s+it.value; }, 0);
+
+    if(total===0){
+      var cx = cssW/2, cy = cssH/2, rOut = 78, rIn = 46;
+      ctx.beginPath();
+      ctx.arc(cx, cy, rOut, 0, Math.PI*2);
+      ctx.arc(cx, cy, rIn, 0, Math.PI*2, true);
+      ctx.fillStyle = "#F1E9CC";
+      ctx.fill("evenodd");
+      legendEl.innerHTML = "<div class='chart-empty'>この月の支出はまだありません</div>";
+      return;
+    }
+
+    var cx = cssW/2, cy = cssH/2, rOut = 88, rIn = 52;
+    var angle = -Math.PI/2; // 12時方向から時計回り
+    items.forEach(function(it, i){
+      var slice = (it.value/total) * Math.PI*2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, rOut, angle, angle+slice);
+      ctx.closePath();
+      ctx.fillStyle = DONUT_COLORS[i % DONUT_COLORS.length];
+      ctx.fill();
+      angle += slice;
+    });
+    // 中央をくり抜いてドーナツ状に
+    ctx.beginPath();
+    ctx.arc(cx, cy, rIn, 0, Math.PI*2);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+    // 中央に合計
+    ctx.fillStyle = "#3E3623";
+    ctx.font = "bold 15px 'Space Mono', monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(fmtYen(total), cx, cy);
+    ctx.textBaseline = "alphabetic";
+
+    // 凡例(上位のみ表示し、残りは「その他」)
+    var maxLegend = 6;
+    var legendItems = items.slice(0, maxLegend);
+    var restSum = items.slice(maxLegend).reduce(function(s,it){ return s+it.value; }, 0);
+    var html = legendItems.map(function(it, i){
+      var pct = Math.round((it.value/total)*100);
+      return "<div class='legend-item'>"+
+        "<span class='legend-dot' style='background:"+DONUT_COLORS[i % DONUT_COLORS.length]+"'></span>"+
+        "<span class='legend-name'>"+escapeHtml(it.name)+"</span>"+
+        "<span class='legend-val'>"+pct+"%</span></div>";
+    }).join("");
+    if(restSum>0){
+      var pctRest = Math.round((restSum/total)*100);
+      html += "<div class='legend-item'>"+
+        "<span class='legend-dot' style='background:#C9C0A6'></span>"+
+        "<span class='legend-name'>その他</span>"+
+        "<span class='legend-val'>"+pctRest+"%</span></div>";
+    }
+    legendEl.innerHTML = html;
   }
 
   // ================= 履歴 =================
@@ -1134,6 +1433,14 @@ optgroup{font-weight:700;}
     renderAccountList();
     refreshCurrentPage();
     toast("初期状態に戻しました");
+  });
+
+  // 画面の向きや幅が変わったとき、ホーム表示中ならグラフを描き直す
+  var resizeTimer = null;
+  window.addEventListener("resize", function(){
+    if(currentPage !== "home") return;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function(){ renderHome(); }, 200);
   });
 
   // ================= 初期化 =================
