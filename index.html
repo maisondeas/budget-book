@@ -502,7 +502,7 @@ optgroup{font-weight:700;}
 .calc-subline{font-size:13px;color:var(--ink-soft);min-height:18px;}
 .calc-mainline{font-size:28px;font-weight:700;color:var(--ink);}
 .calc-mainline .calc-yen{font-size:15px;font-weight:700;color:var(--ink-soft);margin-left:4px;}
-.calc-grid{display:grid;grid-template-columns:repeat(4, 1fr);gap:8px;}
+.calc-grid{display:grid;grid-template-columns:repeat(5, 1fr);gap:8px;}
 .calc-btn{
   height:52px;
   border:none;border-radius:12px;
@@ -512,11 +512,23 @@ optgroup{font-weight:700;}
   cursor:pointer;
 }
 .calc-btn:active{background:#FBE9AE;}
-.calc-btn.calc-fn{color:var(--ink-soft);font-size:16px;}
+.calc-btn.calc-fn{color:var(--ink-soft);font-size:15px;background:#F3ECD3;}
 .calc-btn.calc-op{background:#FBF3D6;color:#7A5E10;}
-.calc-btn.calc-zero{grid-column:span 2;}
-.calc-btn.calc-eq{grid-column:span 2;background:var(--accent-dark);color:#fff;}
-.btn.calc-done{background:var(--accent);color:#4A3410;}
+.calc-btn.calc-doublezero{grid-column:span 2;}
+.calc-btn.calc-eq{grid-row:span 2;height:auto;background:var(--accent-dark);color:#fff;font-size:22px;}
+/* 決定バー:画像と同じく画面幅いっぱいの帯状ボタンとして、パネル下端に配置する */
+.calc-confirm-bar{
+  display:block;
+  width:calc(100% + 32px);
+  margin:14px -16px calc(-18px - env(safe-area-inset-bottom));
+  padding:16px 16px calc(16px + env(safe-area-inset-bottom));
+  border:none;
+  border-radius:0;
+  background:var(--accent);
+  color:#4A3410;
+  font-size:16px;font-weight:700;
+  cursor:pointer;
+}
 
 #toast{
   position:fixed;left:50%;bottom:110px;transform:translateX(-50%) translateY(20px);
@@ -829,30 +841,29 @@ optgroup{font-weight:700;}
     <div class="calc-mainline"><span class="font-num" id="calc-display-value">0</span><span class="calc-yen">円</span></div>
   </div>
   <div class="calc-grid">
-    <button type="button" class="calc-btn calc-fn" data-calc="clear">C</button>
-    <button type="button" class="calc-btn calc-fn" data-calc="back">⌫</button>
-    <button type="button" class="calc-btn calc-op" data-calc="op" data-op="÷">÷</button>
-    <button type="button" class="calc-btn calc-op" data-calc="op" data-op="×">×</button>
-
     <button type="button" class="calc-btn" data-calc="digit" data-d="7">7</button>
     <button type="button" class="calc-btn" data-calc="digit" data-d="8">8</button>
     <button type="button" class="calc-btn" data-calc="digit" data-d="9">9</button>
-    <button type="button" class="calc-btn calc-op" data-calc="op" data-op="-">−</button>
+    <button type="button" class="calc-btn calc-op" data-calc="op" data-op="÷">÷</button>
+    <button type="button" class="calc-btn calc-fn" data-calc="clear">AC</button>
 
     <button type="button" class="calc-btn" data-calc="digit" data-d="4">4</button>
     <button type="button" class="calc-btn" data-calc="digit" data-d="5">5</button>
     <button type="button" class="calc-btn" data-calc="digit" data-d="6">6</button>
-    <button type="button" class="calc-btn calc-op" data-calc="op" data-op="+">＋</button>
+    <button type="button" class="calc-btn calc-op" data-calc="op" data-op="×">×</button>
+    <button type="button" class="calc-btn calc-fn" data-calc="back">⌫</button>
 
-    <button type="button" class="calc-btn" data-calc="double-zero">00</button>
     <button type="button" class="calc-btn" data-calc="digit" data-d="1">1</button>
     <button type="button" class="calc-btn" data-calc="digit" data-d="2">2</button>
     <button type="button" class="calc-btn" data-calc="digit" data-d="3">3</button>
-
-    <button type="button" class="calc-btn calc-zero" data-calc="digit" data-d="0">0</button>
+    <button type="button" class="calc-btn calc-op" data-calc="op" data-op="-">−</button>
     <button type="button" class="calc-btn calc-eq" data-calc="equals">＝</button>
+
+    <button type="button" class="calc-btn" data-calc="digit" data-d="0">0</button>
+    <button type="button" class="calc-btn calc-doublezero" data-calc="double-zero">00</button>
+    <button type="button" class="calc-btn calc-op" data-calc="op" data-op="+">＋</button>
   </div>
-  <button type="button" class="btn calc-done" id="calc-done-btn" style="margin-top:10px;">この金額にする</button>
+  <button type="button" class="calc-confirm-bar" id="calc-done-btn">決定</button>
 </div>
 
 <div id="toast"></div>
