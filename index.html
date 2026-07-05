@@ -465,12 +465,30 @@ optgroup{font-weight:700;}
 .sheet-header h2{font-size:16px;margin:0;font-weight:700;}
 .sheet-close{border:none;background:#FBF3D6;color:var(--ink);width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;}
 
-/* ===== 金額欄(タップで電卓を開く) ===== */
-.amount-field-wrap{position:relative;}
-.amount-field-wrap input{cursor:pointer;padding-right:44px;}
-.amount-calc-icon{
-  position:absolute;right:12px;top:50%;transform:translateY(-50%);
-  font-size:18px;pointer-events:none;opacity:0.8;
+/* ===== 借方・貸方の複数行入力 ===== */
+.line-section{margin-bottom:14px;}
+.line-section-header{
+  display:flex;justify-content:space-between;align-items:baseline;
+  font-size:12.5px;font-weight:700;color:var(--ink-soft);
+  margin-bottom:6px;
+}
+.line-section-header .line-total{font-size:14px;color:var(--ink);}
+.line-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+.line-row .line-account{flex:1 1 auto;min-width:0;}
+.line-amount-wrap{flex:0 0 108px;position:relative;}
+.line-amount{width:100%;cursor:pointer;text-align:right;padding-right:14px;}
+.line-remove{
+  flex:0 0 auto;width:32px;height:32px;
+  border:none;border-radius:9px;
+  background:var(--red-soft);color:var(--red);
+  font-size:13px;cursor:pointer;
+}
+.line-remove.is-hidden{visibility:hidden;}
+.add-line-btn{
+  width:100%;padding:10px;margin-top:2px;
+  border:1.5px dashed var(--line);border-radius:10px;
+  background:transparent;color:var(--accent-dark);
+  font-size:13.5px;font-weight:700;cursor:pointer;
 }
 
 /* ===== 電卓パネル ===== */
@@ -804,30 +822,47 @@ optgroup{font-weight:700;}
       <label for="f-date">日付</label>
       <input type="date" id="f-date" required>
     </div>
-    <div class="form-row">
-      <label for="f-debit">借方科目</label>
-      <select id="f-debit" required></select>
-    </div>
-    <div class="form-row">
-      <label for="f-credit">貸方科目</label>
-      <select id="f-credit" required></select>
-    </div>
-    <div class="form-row">
-      <label for="f-amount">金額(円)</label>
-      <div class="amount-field-wrap">
-        <input type="text" id="f-amount" inputmode="none" readonly required placeholder="タップして入力">
-        <span class="amount-calc-icon">🧮</span>
+
+    <div class="line-section">
+      <div class="line-section-header">
+        <span>借方</span>
+        <span class="line-total font-num" id="debit-total-label">¥0</span>
       </div>
+      <div id="debit-lines"></div>
+      <button type="button" class="add-line-btn" id="add-debit-line">＋ 借方の行を追加</button>
     </div>
+
+    <div class="line-section">
+      <div class="line-section-header">
+        <span>貸方</span>
+        <span class="line-total font-num" id="credit-total-label">¥0</span>
+      </div>
+      <div id="credit-lines"></div>
+      <button type="button" class="add-line-btn" id="add-credit-line">＋ 貸方の行を追加</button>
+    </div>
+
+    <div class="balance-check" id="entry-balance-check">借方合計と貸方合計を確認しています…</div>
+
     <div class="form-row">
       <label for="f-memo">摘要(メモ)</label>
       <input type="text" id="f-memo" placeholder="例:スーパーで食材購入">
     </div>
-    <p class="hint">借方=貸方が常に自動的に成立する形式です(1仕訳=借方1科目・貸方1科目のため)。</p>
+    <p class="hint">借方合計と貸方合計が一致していないと記帳できません。1つの借方に複数の貸方(またはその逆)を割り当てることもできます。</p>
     <button type="submit" class="btn" id="entry-submit-btn" style="margin-top:6px;">この仕訳を記帳する</button>
     <button type="button" class="btn danger" id="entry-delete-btn" style="margin-top:10px;display:none;">この仕訳を削除する</button>
   </form>
 </div>
+
+<!-- 借方・貸方の1行分のひな形(JSでコピーして使う) -->
+<template id="line-row-template">
+  <div class="line-row">
+    <select class="line-account"></select>
+    <div class="line-amount-wrap">
+      <input type="text" class="line-amount" inputmode="none" readonly placeholder="金額">
+    </div>
+    <button type="button" class="line-remove" aria-label="この行を削除">✕</button>
+  </div>
+</template>
 
 <!-- ===================== 金額入力用の電卓 ===================== -->
 <div class="calc-backdrop" id="calc-backdrop"></div>
@@ -924,11 +959,33 @@ optgroup{font-weight:700;}
     catch(e){ state.transactions = []; }
 
     if(!rawAccounts){ saveAccounts(); }
+
+    // 以前のバージョン(借方1科目・貸方1科目のみ)のデータを、
+    // 借方・貸方それぞれ複数行に対応した新しい形に自動で変換する
+    var migrated = false;
+    state.transactions.forEach(function(tx){
+      if(!tx.debitLines && tx.debit !== undefined){
+        tx.debitLines = [{ account: tx.debit, amount: tx.amount }];
+        tx.creditLines = [{ account: tx.credit, amount: tx.amount }];
+        delete tx.debit;
+        delete tx.credit;
+        delete tx.amount;
+        migrated = true;
+      }
+      if(!tx.debitLines) tx.debitLines = [];
+      if(!tx.creditLines) tx.creditLines = [];
+    });
+    if(migrated){ saveTx(); }
   }
   function saveAccounts(){ localStorage.setItem(STORAGE_ACCOUNTS, JSON.stringify(state.accounts)); }
   function saveTx(){ localStorage.setItem(STORAGE_TX, JSON.stringify(state.transactions)); }
 
   function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+  // 仕訳1件の借方合計・貸方合計を計算する(常に一致する前提)
+  function sumLines(lines){
+    return (lines||[]).reduce(function(s,l){ return s + (l.amount||0); }, 0);
+  }
 
   function fmtYen(n){
     var neg = n < 0;
@@ -966,17 +1023,50 @@ optgroup{font-weight:700;}
     if(ICONS[account.id]) return ICONS[account.id];
     return TYPE_ICON_FALLBACK[account.type] || "🔘";
   }
-  // 1つの仕訳を「支出」「収入」「振替」に分類する
-  // 借方が費用科目→支出、貸方が収益科目→収入、それ以外(資産間の移動やカード引き落としなど)は振替として扱う
-  function describeTx(tx){
-    var d = accountById(tx.debit), c = accountById(tx.credit);
-    if(d && d.type==="expense"){
-      return {kind:"expense", icon:iconFor(d), title:d? d.name : "(削除済科目)", sign:-1};
+  // 1つの仕訳(複数行の場合も含む)を「支出」「収入」「振替」に分類し、
+  // 一覧表示用のアイコン・タイトル・金額をまとめる
+  // ルール:借方がすべて費用科目→支出、貸方がすべて収益科目→収入、それ以外(資産間の移動・カード引き落とし・分割仕訳の混在など)は振替として扱う
+  function accountNames(lines){
+    return (lines||[]).map(function(l){
+      var a = accountById(l.account);
+      return a ? a.name : "(削除済)";
+    }).join("・");
+  }
+  function summarizeTx(tx){
+    var debitLines = tx.debitLines || [];
+    var creditLines = tx.creditLines || [];
+    var debitTotal = sumLines(debitLines);
+    var creditTotal = sumLines(creditLines);
+
+    // 借方1行・貸方1行のシンプルな仕訳は、これまでどおりの表示にする
+    if(debitLines.length===1 && creditLines.length===1){
+      var d = accountById(debitLines[0].account), c = accountById(creditLines[0].account);
+      if(d && d.type==="expense"){
+        return {kind:"expense", icon:iconFor(d), title:d.name, amount:debitTotal};
+      }
+      if(c && c.type==="revenue"){
+        return {kind:"income", icon:iconFor(c), title:c.name, amount:creditTotal};
+      }
+      return {kind:"transfer", icon:"🔁", title:(d?d.name:"(削除済)")+"／"+(c?c.name:"(削除済)"), amount:debitTotal};
     }
-    if(c && c.type==="revenue"){
-      return {kind:"income", icon:iconFor(c), title:c? c.name : "(削除済科目)", sign:1};
+
+    // 借方・貸方のどちらかが複数行ある「分割仕訳」の場合
+    var expenseSum = debitLines.reduce(function(s,l){
+      var a = accountById(l.account);
+      return s + ((a && a.type==="expense") ? l.amount : 0);
+    }, 0);
+    var incomeSum = creditLines.reduce(function(s,l){
+      var a = accountById(l.account);
+      return s + ((a && a.type==="revenue") ? l.amount : 0);
+    }, 0);
+
+    if(expenseSum>0 && expenseSum===debitTotal && incomeSum===0){
+      return {kind:"expense", icon:"🧾", title:accountNames(debitLines), amount:debitTotal};
     }
-    return {kind:"transfer", icon:"🔁", title:(d?d.name:"(削除済)")+"／"+(c?c.name:"(削除済)"), sign:0};
+    if(incomeSum>0 && incomeSum===creditTotal && expenseSum===0){
+      return {kind:"income", icon:"🧾", title:accountNames(creditLines), amount:creditTotal};
+    }
+    return {kind:"transfer", icon:"🔁", title:accountNames(debitLines)+"／"+accountNames(creditLines), amount:debitTotal};
   }
 
   // ---------- balance calculation ----------
@@ -985,10 +1075,14 @@ optgroup{font-weight:700;}
     state.accounts.forEach(function(a){ bal[a.id] = 0; });
     state.transactions.forEach(function(tx){
       if(filterFn && !filterFn(tx)) return;
-      if(bal[tx.debit] === undefined) bal[tx.debit] = 0;
-      if(bal[tx.credit] === undefined) bal[tx.credit] = 0;
-      bal[tx.debit] += tx.amount;
-      bal[tx.credit] -= tx.amount;
+      (tx.debitLines||[]).forEach(function(l){
+        if(bal[l.account] === undefined) bal[l.account] = 0;
+        bal[l.account] += l.amount;
+      });
+      (tx.creditLines||[]).forEach(function(l){
+        if(bal[l.account] === undefined) bal[l.account] = 0;
+        bal[l.account] -= l.amount;
+      });
     });
     var normalized = {};
     state.accounts.forEach(function(a){
@@ -1023,7 +1117,9 @@ optgroup{font-weight:700;}
   // ================= 仕訳入力シート(新規・編集 兼用) =================
   var backdrop = document.getElementById("entry-backdrop");
   var sheet = document.getElementById("entry-sheet");
-  var amountInput = document.getElementById("f-amount");
+  var lineRowTemplate = document.getElementById("line-row-template");
+  var debitLinesEl = document.getElementById("debit-lines");
+  var creditLinesEl = document.getElementById("credit-lines");
 
   // ---------- 金額欄をタップしたときに開く電卓 ----------
   var calcBackdrop = document.getElementById("calc-backdrop");
@@ -1031,6 +1127,7 @@ optgroup{font-weight:700;}
   var calcDisplayEl = document.getElementById("calc-display-value");
   var calcSublineEl = document.getElementById("calc-subline");
   var OP_LABEL = { "+":"＋", "-":"−", "×":"×", "÷":"÷" };
+  var calcTargetInput = null; // 今どの金額欄に対して電卓を開いているか
 
   var calcDisplay = "0";      // 今画面に出ている数字(文字列)
   var calcAccumulator = null; // それまでの計算結果
@@ -1109,9 +1206,10 @@ optgroup{font-weight:700;}
     calcRender();
   }
 
-  // 電卓を開く(今の金額欄の値を初期表示にする)
-  function openCalc(){
-    var existing = (amountInput.value || "").replace(/[^0-9]/g, "");
+  // 電卓を開く(タップされた金額欄を記憶し、その値を初期表示にする)
+  function openCalc(targetInput){
+    calcTargetInput = targetInput;
+    var existing = (targetInput.value || "").replace(/[^0-9]/g, "");
     calcDisplay = existing || "0";
     calcAccumulator = null;
     calcPendingOp = null;
@@ -1120,15 +1218,18 @@ optgroup{font-weight:700;}
     calcBackdrop.classList.add("show");
     calcPanel.classList.add("show");
   }
-  // 計算中の内容を確定して金額欄に反映し、電卓を閉じる
+  // 計算中の内容を確定して、開いていた金額欄に反映し、電卓を閉じる
   function commitCalc(){
     if(calcPendingOp !== null){ calcEquals(); } // 計算の途中なら先に確定する
     var finalValue = parseInt(calcDisplay || "0", 10) || 0;
-    amountInput.value = String(finalValue);
+    if(calcTargetInput){
+      calcTargetInput.value = String(finalValue);
+      calcTargetInput.dispatchEvent(new Event("change", { bubbles: true }));
+    }
     calcBackdrop.classList.remove("show");
     calcPanel.classList.remove("show");
+    calcTargetInput = null;
   }
-  amountInput.addEventListener("click", openCalc);
   document.getElementById("calc-close").addEventListener("click", commitCalc);
   document.getElementById("calc-done-btn").addEventListener("click", commitCalc);
   calcBackdrop.addEventListener("click", commitCalc);
@@ -1145,16 +1246,95 @@ optgroup{font-weight:700;}
     else if(action === "back") calcBackspace();
   });
 
+  // ---------- 借方・貸方の行(複数行)管理 ----------
+  // 1行分のDOMを作る。selectedId・amountを渡すと、その内容で初期表示する
+  function createLineRow(selectedId, amount){
+    var frag = lineRowTemplate.content.cloneNode(true);
+    var row = frag.querySelector(".line-row");
+    var sel = row.querySelector(".line-account");
+    var amtInput = row.querySelector(".line-amount");
+    populateAccountSelect(sel, selectedId);
+    if(amount){ amtInput.value = String(amount); }
+    amtInput.addEventListener("click", function(){ openCalc(amtInput); });
+    sel.addEventListener("change", updateLineTotals);
+    row.querySelector(".line-remove").addEventListener("click", function(){
+      var container = row.parentElement;
+      if(container.querySelectorAll(".line-row").length <= 1) return; // 最低1行は残す
+      row.remove();
+      updateRemoveButtonVisibility(container);
+      updateLineTotals();
+    });
+    return row;
+  }
+  function updateRemoveButtonVisibility(container){
+    var rows = container.querySelectorAll(".line-row");
+    rows.forEach(function(row){
+      var btn = row.querySelector(".line-remove");
+      btn.classList.toggle("is-hidden", rows.length <= 1);
+    });
+  }
+  function addDebitLine(selectedId, amount){
+    var row = createLineRow(selectedId, amount);
+    debitLinesEl.appendChild(row);
+    updateRemoveButtonVisibility(debitLinesEl);
+    updateLineTotals();
+  }
+  function addCreditLine(selectedId, amount){
+    var row = createLineRow(selectedId, amount);
+    creditLinesEl.appendChild(row);
+    updateRemoveButtonVisibility(creditLinesEl);
+    updateLineTotals();
+  }
+  document.getElementById("add-debit-line").addEventListener("click", function(){ addDebitLine(); });
+  document.getElementById("add-credit-line").addEventListener("click", function(){ addCreditLine(); });
+
+  // 金額欄の値が(電卓経由で)変わるたびに、借方合計・貸方合計を再計算して表示する
+  function readLinesFrom(container){
+    var rows = container.querySelectorAll(".line-row");
+    var lines = [];
+    rows.forEach(function(row){
+      var account = row.querySelector(".line-account").value;
+      var amount = parseInt((row.querySelector(".line-amount").value||"").replace(/[^0-9]/g,""), 10) || 0;
+      lines.push({ account: account, amount: amount });
+    });
+    return lines;
+  }
+  function updateLineTotals(){
+    var debitTotal = sumLines(readLinesFrom(debitLinesEl));
+    var creditTotal = sumLines(readLinesFrom(creditLinesEl));
+    document.getElementById("debit-total-label").textContent = fmtYen(debitTotal);
+    document.getElementById("credit-total-label").textContent = fmtYen(creditTotal);
+
+    var checkEl = document.getElementById("entry-balance-check");
+    if(debitTotal===0 && creditTotal===0){
+      checkEl.textContent = "借方・貸方それぞれの科目と金額を入力してください。";
+      checkEl.style.background = "#F3ECD3"; checkEl.style.color = "var(--ink-soft)";
+    }else if(debitTotal===creditTotal){
+      checkEl.textContent = "貸借一致:借方合計と貸方合計が一致しています。";
+      checkEl.style.background = "#EAF2E4"; checkEl.style.color = "#4E7345";
+    }else{
+      checkEl.textContent = "借方合計("+fmtYen(debitTotal)+")と貸方合計("+fmtYen(creditTotal)+")が一致していません。";
+      checkEl.style.background = "var(--red-soft)"; checkEl.style.color = "var(--red)";
+    }
+    return { debitTotal: debitTotal, creditTotal: creditTotal };
+  }
+  // 金額欄のchangeイベント(電卓確定時に発火させている)を拾って合計を更新する
+  document.getElementById("entry-form").addEventListener("change", function(e){
+    if(e.target.classList && e.target.classList.contains("line-amount")){ updateLineTotals(); }
+  });
+
   // 新規記帳モードでシートを開く
   function openSheetNew(){
     document.getElementById("f-edit-id").value = "";
     document.getElementById("entry-sheet-title").textContent = "仕訳を入力";
     document.getElementById("entry-submit-btn").textContent = "この仕訳を記帳する";
     document.getElementById("entry-delete-btn").style.display = "none";
-    refreshAllAccountSelects();
     document.getElementById("f-date").value = todayStr();
-    document.getElementById("f-amount").value = "";
     document.getElementById("f-memo").value = "";
+    debitLinesEl.innerHTML = "";
+    creditLinesEl.innerHTML = "";
+    addDebitLine();
+    addCreditLine();
     backdrop.classList.add("show");
     sheet.classList.add("show");
   }
@@ -1168,12 +1348,18 @@ optgroup{font-weight:700;}
     document.getElementById("entry-sheet-title").textContent = "仕訳を編集";
     document.getElementById("entry-submit-btn").textContent = "変更を保存する";
     document.getElementById("entry-delete-btn").style.display = "block";
-    // 選択中の科目を反映した状態でプルダウンを作り直す
-    populateAccountSelect(document.getElementById("f-debit"), tx.debit);
-    populateAccountSelect(document.getElementById("f-credit"), tx.credit);
     document.getElementById("f-date").value = tx.date;
-    document.getElementById("f-amount").value = tx.amount;
     document.getElementById("f-memo").value = tx.memo || "";
+
+    debitLinesEl.innerHTML = "";
+    creditLinesEl.innerHTML = "";
+    (tx.debitLines && tx.debitLines.length ? tx.debitLines : [{account:"",amount:""}]).forEach(function(l){
+      addDebitLine(l.account, l.amount);
+    });
+    (tx.creditLines && tx.creditLines.length ? tx.creditLines : [{account:"",amount:""}]).forEach(function(l){
+      addCreditLine(l.account, l.amount);
+    });
+
     backdrop.classList.add("show");
     sheet.classList.add("show");
   }
@@ -1217,31 +1403,42 @@ optgroup{font-weight:700;}
       sel.appendChild(og);
     });
   }
+  // 科目の追加・削除・並び替え後、シート内のすべての科目プルダウンを作り直す
   function refreshAllAccountSelects(){
-    populateAccountSelect(document.getElementById("f-debit"));
-    populateAccountSelect(document.getElementById("f-credit"));
+    document.querySelectorAll("#debit-lines .line-account, #credit-lines .line-account").forEach(function(sel){
+      var current = sel.value;
+      populateAccountSelect(sel, current);
+    });
   }
 
   document.getElementById("entry-form").addEventListener("submit", function(e){
     e.preventDefault();
     var editId = document.getElementById("f-edit-id").value;
     var date = document.getElementById("f-date").value;
-    var debit = document.getElementById("f-debit").value;
-    var credit = document.getElementById("f-credit").value;
-    var amount = parseFloat(document.getElementById("f-amount").value);
     var memo = document.getElementById("f-memo").value.trim();
+    var debitLines = readLinesFrom(debitLinesEl);
+    var creditLines = readLinesFrom(creditLinesEl);
 
-    if(!date || !debit || !credit || !amount || amount<=0){ toast("すべての必須項目を入力してください"); return; }
-    if(debit === credit){ toast("借方科目と貸方科目は別の科目を選んでください"); return; }
+    if(!date){ toast("日付を入力してください"); return; }
+    var incomplete =
+      debitLines.some(function(l){ return !l.account || l.amount<=0; }) ||
+      creditLines.some(function(l){ return !l.account || l.amount<=0; });
+    if(incomplete){ toast("借方・貸方それぞれ、科目を選び0円より大きい金額を入力してください"); return; }
+
+    var debitTotal = sumLines(debitLines);
+    var creditTotal = sumLines(creditLines);
+    if(debitTotal !== creditTotal){
+      toast("借方合計("+fmtYen(debitTotal)+")と貸方合計("+fmtYen(creditTotal)+")が一致していません");
+      return;
+    }
 
     if(editId){
       // 編集:該当の仕訳を書き換える
       for(var i=0;i<state.transactions.length;i++){
         if(state.transactions[i].id===editId){
           state.transactions[i].date = date;
-          state.transactions[i].debit = debit;
-          state.transactions[i].credit = credit;
-          state.transactions[i].amount = amount;
+          state.transactions[i].debitLines = debitLines;
+          state.transactions[i].creditLines = creditLines;
           state.transactions[i].memo = memo;
           break;
         }
@@ -1252,10 +1449,8 @@ optgroup{font-weight:700;}
       refreshCurrentPage();
     }else{
       // 新規記帳
-      state.transactions.push({ id: uid(), date: date, debit: debit, credit: credit, amount: amount, memo: memo });
+      state.transactions.push({ id: uid(), date: date, debitLines: debitLines, creditLines: creditLines, memo: memo });
       saveTx();
-      document.getElementById("f-amount").value = "";
-      document.getElementById("f-memo").value = "";
       closeSheet();
       toast("記帳しました");
       refreshCurrentPage();
@@ -1265,16 +1460,16 @@ optgroup{font-weight:700;}
   // ================= 共通:取引1件のHTML =================
   // mode: "home"(タップ不可の閲覧用) / "history"(タップで編集)
   function txRowHtml(tx, editable){
-    var d = describeTx(tx);
-    var amountText = d.kind==="transfer" ? fmtYen(tx.amount) : (d.sign>0? "+"+fmtYen(tx.amount) : "-"+fmtYen(tx.amount));
+    var s = summarizeTx(tx);
+    var amountText = s.kind==="transfer" ? fmtYen(s.amount) : (s.kind==="income" ? "+"+fmtYen(s.amount) : "-"+fmtYen(s.amount));
     return "<div class='tx-row"+(editable?" tx-row-editable":"")+"'"+(editable?" data-id='"+tx.id+"'":"")+">"+
       "<div class='tx-date'>"+formatShortDate(tx.date)+"</div>"+
-      "<div class='tx-icon'>"+d.icon+"</div>"+
+      "<div class='tx-icon'>"+s.icon+"</div>"+
       "<div class='tx-main'>"+
-        "<div class='tx-title'>"+escapeHtml(d.title)+"</div>"+
+        "<div class='tx-title'>"+escapeHtml(s.title)+"</div>"+
         (tx.memo ? "<div class='tx-memo'>"+escapeHtml(tx.memo)+"</div>" : "")+
       "</div>"+
-      "<div class='tx-amount "+d.kind+" font-num'>"+amountText+"</div>"+
+      "<div class='tx-amount "+s.kind+" font-num'>"+amountText+"</div>"+
       (editable ? "<span class='tx-edit-chevron'>›</span>" : "")+
     "</div>";
   }
@@ -1298,9 +1493,14 @@ optgroup{font-weight:700;}
 
     var income = 0, expense = 0;
     monthTx.forEach(function(tx){
-      var d = describeTx(tx);
-      if(d.kind==="income") income += tx.amount;
-      if(d.kind==="expense") expense += tx.amount;
+      (tx.debitLines||[]).forEach(function(l){
+        var a = accountById(l.account);
+        if(a && a.type==="expense") expense += l.amount;
+      });
+      (tx.creditLines||[]).forEach(function(l){
+        var a = accountById(l.account);
+        if(a && a.type==="revenue") income += l.amount;
+      });
     });
     var balance = income - expense;
 
@@ -1360,13 +1560,15 @@ optgroup{font-weight:700;}
     var cssW = 300, cssH = 180;
     var ctx = setupCanvas(canvas, cssW, cssH);
 
-    // その月の日ごとの支出を集計
+    // その月の日ごとの支出を集計(明細行ごとに費用科目を拾う)
     var expenseByDate = {};
     monthTx.forEach(function(tx){
-      var d = describeTx(tx);
-      if(d.kind==="expense"){
-        expenseByDate[tx.date] = (expenseByDate[tx.date]||0) + tx.amount;
-      }
+      (tx.debitLines||[]).forEach(function(l){
+        var a = accountById(l.account);
+        if(a && a.type==="expense"){
+          expenseByDate[tx.date] = (expenseByDate[tx.date]||0) + l.amount;
+        }
+      });
     });
 
     // 月内を「週」に分割(1〜7日, 8〜14日, ...)
@@ -1442,13 +1644,15 @@ optgroup{font-weight:700;}
     var cssW = 200, cssH = 200;
     var ctx = setupCanvas(canvas, cssW, cssH);
 
-    // 費用科目ごとに集計
+    // 費用科目ごとに集計(明細行ごとに費用科目を拾う)
     var byAccount = {};
     monthTx.forEach(function(tx){
-      var d = accountById(tx.debit);
-      if(d && d.type==="expense"){
-        byAccount[d.id] = (byAccount[d.id]||0) + tx.amount;
-      }
+      (tx.debitLines||[]).forEach(function(l){
+        var a = accountById(l.account);
+        if(a && a.type==="expense"){
+          byAccount[a.id] = (byAccount[a.id]||0) + l.amount;
+        }
+      });
     });
     var items = Object.keys(byAccount).map(function(id){
       var a = accountById(id);
@@ -1593,8 +1797,13 @@ optgroup{font-weight:700;}
         if(toDate && t.date > toDate) return false;
       }
       // "all" のときは期間による絞り込みなし
-      // 勘定科目でしぼり込む(借方または貸方に含まれる仕訳のみ)
-      if(histAccountId && t.debit!==histAccountId && t.credit!==histAccountId) return false;
+      // 勘定科目でしぼり込む(借方・貸方いずれかの行に含まれる仕訳のみ)
+      if(histAccountId){
+        var hasAccount =
+          (t.debitLines||[]).some(function(l){ return l.account===histAccountId; }) ||
+          (t.creditLines||[]).some(function(l){ return l.account===histAccountId; });
+        if(!hasAccount) return false;
+      }
       return true;
     }).sort(function(a,b){
       return a.date < b.date ? 1 : (a.date > b.date ? -1 : (a.id < b.id ? 1 : -1));
@@ -1774,7 +1983,10 @@ optgroup{font-weight:700;}
       wrap.appendChild(heading);
 
       listByType.forEach(function(a, idxInType){
-        var used = state.transactions.some(function(t){ return t.debit===a.id || t.credit===a.id; });
+        var used = state.transactions.some(function(t){
+          return (t.debitLines||[]).some(function(l){ return l.account===a.id; }) ||
+                 (t.creditLines||[]).some(function(l){ return l.account===a.id; });
+        });
         var item = document.createElement("div");
         item.className = "account-item";
         var isFirst = idxInType===0;
