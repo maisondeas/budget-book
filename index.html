@@ -340,6 +340,14 @@ optgroup{font-weight:700;}
 .btn.secondary{background:#FBF3D6;color:var(--ink);}
 .btn.danger{background:var(--red-soft);color:var(--red);}
 .hint{font-size:12px;color:var(--ink-soft);line-height:1.6;}
+.app-version-label{
+  text-align:center;
+  font-size:11px;
+  color:var(--ink-soft);
+  opacity:0.7;
+  margin:4px 16px 20px;
+  font-family:'Space Mono', monospace;
+}
 .balance-check{margin-top:10px;font-size:12.5px;padding:9px 11px;border-radius:8px;background:#EAF2E4;color:#4E7345;}
 
 /* ===== Filter row (分析タブ) ===== */
@@ -793,6 +801,7 @@ optgroup{font-weight:700;}
       <p class="hint">この端末に保存されている仕訳・勘定科目をすべて消去し、初期状態に戻します。事前にバックアップの書き出しをおすすめします。</p>
       <button class="btn danger" id="btn-reset" style="margin-top:10px;">全データを削除する</button>
     </div>
+    <p class="app-version-label" id="app-version-label"></p>
   </section>
 
   <!-- ===================== 下部ナビ + 追加ボタン ===================== -->
@@ -909,6 +918,9 @@ optgroup{font-weight:700;}
 
   var STORAGE_TX = "kakeibo_transactions_v1";
   var STORAGE_ACCOUNTS = "kakeibo_accounts_v1";
+  // ファイルを差し替えたとき、反映されているかご自身で確認するためのバージョン表示
+  // (新しいファイルをお渡しするたびに、この日付・番号を更新します)
+  var APP_VERSION = "2026-07-06.1";
 
   var TYPE_LABEL = { asset:"資産", liability:"負債", equity:"純資産", revenue:"収益", expense:"費用" };
   var DEBIT_NORMAL = { asset:true, expense:true, liability:false, equity:false, revenue:false };
@@ -2146,6 +2158,7 @@ optgroup{font-weight:700;}
   });
 
   // ================= 初期化 =================
+  document.getElementById("app-version-label").textContent = "バージョン: " + APP_VERSION;
   loadState();
   refreshAllAccountSelects();
   populatePeriodSelectors();
