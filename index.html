@@ -1026,11 +1026,14 @@ optgroup{font-weight:700;}
   // 1つの仕訳(複数行の場合も含む)を「支出」「収入」「振替」に分類し、
   // 一覧表示用のアイコン・タイトル・金額をまとめる
   // ルール:借方がすべて費用科目→支出、貸方がすべて収益科目→収入、それ以外(資産間の移動・カード引き落とし・分割仕訳の混在など)は振替として扱う
+  // 複数行の科目名は「先頭の科目名 ほか◯件」の短い表記にする(枠からのはみ出し防止)
   function accountNames(lines){
-    return (lines||[]).map(function(l){
-      var a = accountById(l.account);
-      return a ? a.name : "(削除済)";
-    }).join("・");
+    var list = lines || [];
+    if(list.length === 0) return "";
+    var first = accountById(list[0].account);
+    var firstName = first ? first.name : "(削除済)";
+    if(list.length === 1) return firstName;
+    return firstName + " ほか" + (list.length - 1) + "件";
   }
   function summarizeTx(tx){
     var debitLines = tx.debitLines || [];
