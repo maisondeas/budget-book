@@ -1462,6 +1462,14 @@ optgroup{font-weight:700;}
 
   // ================= 共通:取引1件のHTML =================
   // mode: "home"(タップ不可の閲覧用) / "history"(タップで編集)
+  // 表示用タイトルが長すぎるとスマホ画面ではみ出すため、最大9文字までに切り詰める
+  // (9文字を超える場合、先頭8文字+「…」の合計9文字にする)
+  function truncateTitle(str, maxLen){
+    maxLen = maxLen || 9;
+    if(!str || str.length <= maxLen) return str;
+    return str.slice(0, maxLen - 1) + "…";
+  }
+
   function txRowHtml(tx, editable){
     var s = summarizeTx(tx);
     var amountText = s.kind==="transfer" ? fmtYen(s.amount) : (s.kind==="income" ? "+"+fmtYen(s.amount) : "-"+fmtYen(s.amount));
@@ -1469,7 +1477,7 @@ optgroup{font-weight:700;}
       "<div class='tx-date'>"+formatShortDate(tx.date)+"</div>"+
       "<div class='tx-icon'>"+s.icon+"</div>"+
       "<div class='tx-main'>"+
-        "<div class='tx-title'>"+escapeHtml(s.title)+"</div>"+
+        "<div class='tx-title'>"+escapeHtml(truncateTitle(s.title))+"</div>"+
         (tx.memo ? "<div class='tx-memo'>"+escapeHtml(tx.memo)+"</div>" : "")+
       "</div>"+
       "<div class='tx-amount "+s.kind+" font-num'>"+amountText+"</div>"+
