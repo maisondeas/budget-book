@@ -558,9 +558,12 @@ optgroup{font-weight:700;}
 
 #toast{
   position:fixed;left:50%;bottom:110px;transform:translateX(-50%) translateY(20px);
-  background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:24px;
+  background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:18px;
   font-size:13px;opacity:0;pointer-events:none;transition:all .25s ease;z-index:70;
-  white-space:nowrap;
+  width:max-content;
+  max-width:calc(100vw - 40px);
+  text-align:center;
+  line-height:1.5;
 }
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
@@ -637,7 +640,7 @@ optgroup{font-weight:700;}
 
     <div class="section-heading">最近の記録</div>
     <div class="tx-grid" id="home-recent-list"></div>
-    <div class="empty-msg" id="home-recent-empty" style="display:none;">まだ記録がありません。右下の + から記帳しましょう。</div>
+    <div class="empty-msg" id="home-recent-empty" style="display:none;">まだ記録がありません。+を押して記帳しましょう。</div>
   </section>
 
   <!-- ===================== 履歴 ===================== -->
@@ -920,7 +923,7 @@ optgroup{font-weight:700;}
   var STORAGE_ACCOUNTS = "kakeibo_accounts_v1";
   // ファイルを差し替えたとき、反映されているかご自身で確認するためのバージョン表示
   // (新しいファイルをお渡しするたびに、この日付・番号を更新します)
-  var APP_VERSION = "2026-07-06.2";
+  var APP_VERSION = "2026-07-06.4";
 
   var TYPE_LABEL = { asset:"資産", liability:"負債", equity:"純資産", revenue:"収益", expense:"費用" };
   var DEBIT_NORMAL = { asset:true, expense:true, liability:false, equity:false, revenue:false };
@@ -1438,7 +1441,7 @@ optgroup{font-weight:700;}
     var incomplete =
       debitLines.some(function(l){ return !l.account || l.amount<=0; }) ||
       creditLines.some(function(l){ return !l.account || l.amount<=0; });
-    if(incomplete){ toast("借方・貸方それぞれ、科目を選び0円より大きい金額を入力してください"); return; }
+    if(incomplete){ toast("借方・貸方それぞれ科目を選び、0円より大きい金額を入力してください"); return; }
 
     var debitTotal = sumLines(debitLines);
     var creditTotal = sumLines(creditLines);
