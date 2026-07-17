@@ -936,7 +936,7 @@ optgroup{font-weight:700;}
   var STORAGE_TEMPLATES = "kakeibo_templates_v1";
   // ファイルを差し替えたとき、反映されているかご自身で確認するためのバージョン表示
   // (新しいファイルをお渡しするたびに、この日付・番号を更新します)
-  var APP_VERSION = "2026-07-07.2";
+  var APP_VERSION = "2026-07-07.4";
 
   var TYPE_LABEL = { asset:"資産", liability:"負債", equity:"純資産", revenue:"収益", expense:"費用" };
   var DEBIT_NORMAL = { asset:true, expense:true, liability:false, equity:false, revenue:false };
@@ -1349,7 +1349,12 @@ optgroup{font-weight:700;}
       checkEl.textContent = "貸借一致:借方合計と貸方合計が一致しています。";
       checkEl.style.background = "#EAF2E4"; checkEl.style.color = "#4E7345";
     }else{
-      checkEl.textContent = "借方合計("+fmtYen(debitTotal)+")と貸方合計("+fmtYen(creditTotal)+")が一致していません。";
+      // 金額が少ない側と、あといくら不足しているかを示す
+      var shortSide = debitTotal < creditTotal ? "借方" : "貸方";
+      var shortage = Math.abs(creditTotal - debitTotal);
+      checkEl.textContent =
+        "借方合計("+fmtYen(debitTotal)+")と貸方合計("+fmtYen(creditTotal)+")が一致していません。"+
+        shortSide+"があと "+fmtYen(shortage)+" 不足しています。";
       checkEl.style.background = "var(--red-soft)"; checkEl.style.color = "var(--red)";
     }
     return { debitTotal: debitTotal, creditTotal: creditTotal };
@@ -1425,7 +1430,7 @@ optgroup{font-weight:700;}
     toast("テンプレート「"+name+"」を保存しました");
   });
 
-  // 設定タブのテンプレート一覧(削除ボタン付き)
+  // 設定タブのテンプレート一覧(編集・削除ボタン付き)
   function renderTemplateList(){
     var wrap = document.getElementById("template-list");
     wrap.innerHTML = "";
@@ -1438,22 +1443,49 @@ optgroup{font-weight:700;}
       item.className = "account-item";
       item.innerHTML =
         "<span class='account-name'>"+escapeHtml(t.name)+"</span>"+
-        "<span class='account-actions'><button class='del-link' data-id='"+t.id+"'>削除</button></span>";
+        "<span class='account-actions'>"+
+          "<button class='edit-link' data-id='"+t.id+"'>編集</button>"+
+          "<button class='del-link' data-id='"+t.id+"'>削除</button>"+
+        "</span>";
       wrap.appendChild(item);
     });
   }
+  function templateById(id){
+    for(var i=0;i<state.templates.length;i++){ if(state.templates[i].id===id) return state.templates[i]; }
+    return null;
+  }
   document.getElementById("template-list").addEventListener("click", function(e){
-    var btn = e.target.closest(".del-link");
-    if(!btn) return;
-    var id = btn.dataset.id;
-    var tpl = null;
-    for(var i=0;i<state.templates.length;i++){ if(state.templates[i].id===id){ tpl = state.templates[i]; break; } }
-    if(!confirm("テンプレート「"+(tpl?tpl.name:"")+"」を削除しますか?")) return;
-    state.templates = state.templates.filter(function(t){ return t.id!==id; });
-    saveTemplates();
-    populateTemplateSelect();
-    renderTemplateList();
-    toast("テンプレートを削除しました");
+    // 編集(名前のみ変更。中身の科目・金額・摘要は変わりません)
+    var editBtn = e.target.closest(".edit-link");
+    if(editBtn){
+      var eid = editBtn.dataset.id;
+      var etpl = templateById(eid);
+      if(!etpl) return;
+      var newName = prompt("テンプレートの名前を入力してください", etpl.name);
+      if(newName===null) return; // キャンセル
+      newName = newName.trim();
+      if(!newName){ toast("テンプレート名を入力してください"); return; }
+      var dup = state.templates.some(function(t){ return t.name===newName && t.id!==eid; });
+      if(dup){ toast("同じ名前のテンプレートが既にあります"); return; }
+      etpl.name = newName;
+      saveTemplates();
+      populateTemplateSelect();
+      renderTemplateList();
+      toast("テンプレート名を変更しました");
+      return;
+    }
+    // 削除
+    var delBtn = e.target.closest(".del-link");
+    if(delBtn){
+      var id = delBtn.dataset.id;
+      var tpl = templateById(id);
+      if(!confirm("テンプレート「"+(tpl?tpl.name:"")+"」を削除しますか?")) return;
+      state.templates = state.templates.filter(function(t){ return t.id!==id; });
+      saveTemplates();
+      populateTemplateSelect();
+      renderTemplateList();
+      toast("テンプレートを削除しました");
+    }
   });
 
   // 新規記帳モードでシートを開く
