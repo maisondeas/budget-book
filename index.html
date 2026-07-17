@@ -355,7 +355,7 @@ optgroup{font-weight:700;}
 .filter-row .form-row{flex:1 1 140px;min-width:0;margin-bottom:0;}
 @media(max-width:700px){
   .filter-row{flex-direction:column;align-items:stretch;}
-  .filter-row .form-row{width:100%;}
+  .filter-row .form-row{width:100%;flex:0 0 auto;}
   .filter-row .filter-btn-wrap{width:100%;}
   .filter-row .filter-btn-wrap .btn{width:100%;}
 }
@@ -761,6 +761,20 @@ optgroup{font-weight:700;}
     <h1 class="page-title">設定</h1>
 
     <div class="card">
+      <h2>バックアップ(書き出し)</h2>
+      <p class="hint">仕訳データ・勘定科目・仕訳テンプレートをひとつのファイル(JSON形式)としてダウンロードします。iPhoneやiPadのSafariでは「ファイル」アプリに保存されます。</p>
+      <button class="btn secondary" id="btn-export" style="margin-top:10px;">データを書き出す(ダウンロード)</button>
+    </div>
+    <div class="card">
+      <h2>バックアップ(読み込み・復元)</h2>
+      <p class="hint">書き出したJSONファイルを選択すると、現在のデータをそのファイルの内容で<strong>上書き</strong>します。実行前に確認メッセージが表示されます。</p>
+      <div class="form-row" style="margin-top:10px;">
+        <input type="file" id="import-file" accept="application/json,.json">
+      </div>
+      <button class="btn secondary" id="btn-import">選択したファイルを読み込む</button>
+    </div>
+
+    <div class="card">
       <h2>勘定科目を追加</h2>
       <form id="account-form">
         <div class="form-row">
@@ -787,21 +801,14 @@ optgroup{font-weight:700;}
     </div>
 
     <div class="card">
-      <h2>バックアップ(書き出し)</h2>
-      <p class="hint">仕訳データと勘定科目をひとつのファイル(JSON形式)としてダウンロードします。iPhoneやiPadのSafariでは「ファイル」アプリに保存されます。</p>
-      <button class="btn secondary" id="btn-export" style="margin-top:10px;">データを書き出す(ダウンロード)</button>
+      <h2>仕訳テンプレート</h2>
+      <p class="hint">よく使う仕訳の組み合わせです。仕訳入力画面で内容を組み、「この内容をテンプレートとして保存」を押すと、ここに追加されます。</p>
+      <div class="account-list" id="template-list"></div>
     </div>
-    <div class="card">
-      <h2>バックアップ(読み込み・復元)</h2>
-      <p class="hint">書き出したJSONファイルを選択すると、現在のデータをそのファイルの内容で<strong>上書き</strong>します。実行前に確認メッセージが表示されます。</p>
-      <div class="form-row" style="margin-top:10px;">
-        <input type="file" id="import-file" accept="application/json,.json">
-      </div>
-      <button class="btn secondary" id="btn-import">選択したファイルを読み込む</button>
-    </div>
+
     <div class="card">
       <h2>データを全て削除</h2>
-      <p class="hint">この端末に保存されている仕訳・勘定科目をすべて消去し、初期状態に戻します。事前にバックアップの書き出しをおすすめします。</p>
+      <p class="hint">この端末に保存されている仕訳・勘定科目・仕訳テンプレートをすべて消去し、初期状態に戻します。事前にバックアップの書き出しをおすすめします。</p>
       <button class="btn danger" id="btn-reset" style="margin-top:10px;">全データを削除する</button>
     </div>
     <p class="app-version-label" id="app-version-label"></p>
@@ -830,6 +837,10 @@ optgroup{font-weight:700;}
   </div>
   <form id="entry-form">
     <input type="hidden" id="f-edit-id" value="">
+    <div class="form-row" id="template-select-row">
+      <label for="f-template">テンプレートを呼び出す</label>
+      <select id="f-template"></select>
+    </div>
     <div class="form-row">
       <label for="f-date">日付</label>
       <input type="date" id="f-date" required>
@@ -861,6 +872,7 @@ optgroup{font-weight:700;}
     </div>
     <p class="hint">借方合計と貸方合計が一致していないと記帳できません。1つの借方に複数の貸方(またはその逆)を割り当てることもできます。</p>
     <button type="submit" class="btn" id="entry-submit-btn" style="margin-top:6px;">この仕訳を記帳する</button>
+    <button type="button" class="btn secondary" id="save-template-btn" style="margin-top:10px;">この内容をテンプレートとして保存</button>
     <button type="button" class="btn danger" id="entry-delete-btn" style="margin-top:10px;display:none;">この仕訳を削除する</button>
   </form>
 </div>
@@ -921,9 +933,10 @@ optgroup{font-weight:700;}
 
   var STORAGE_TX = "kakeibo_transactions_v1";
   var STORAGE_ACCOUNTS = "kakeibo_accounts_v1";
+  var STORAGE_TEMPLATES = "kakeibo_templates_v1";
   // ファイルを差し替えたとき、反映されているかご自身で確認するためのバージョン表示
   // (新しいファイルをお渡しするたびに、この日付・番号を更新します)
-  var APP_VERSION = "2026-07-06.4";
+  var APP_VERSION = "2026-07-07.2";
 
   var TYPE_LABEL = { asset:"資産", liability:"負債", equity:"純資産", revenue:"収益", expense:"費用" };
   var DEBIT_NORMAL = { asset:true, expense:true, liability:false, equity:false, revenue:false };
@@ -957,14 +970,15 @@ optgroup{font-weight:700;}
   var TYPE_ICON_FALLBACK = { asset:"💼", liability:"📇", equity:"📘", revenue:"💹", expense:"🧾" };
   var WEEKDAY = ["日","月","火","水","木","金","土"];
 
-  var state = { accounts: [], transactions: [] };
+  var state = { accounts: [], transactions: [], templates: [] };
 
   // ---------- storage ----------
   function loadState(){
-    var rawAccounts = null, rawTx = null;
+    var rawAccounts = null, rawTx = null, rawTemplates = null;
     try{
       rawAccounts = localStorage.getItem(STORAGE_ACCOUNTS);
       rawTx = localStorage.getItem(STORAGE_TX);
+      rawTemplates = localStorage.getItem(STORAGE_TEMPLATES);
     }catch(e){ /* localStorageが使えない環境などは無視 */ }
 
     try{ state.accounts = rawAccounts ? JSON.parse(rawAccounts) : DEFAULT_ACCOUNTS.slice(); }
@@ -972,6 +986,9 @@ optgroup{font-weight:700;}
 
     try{ state.transactions = rawTx ? JSON.parse(rawTx) : []; }
     catch(e){ state.transactions = []; }
+
+    try{ state.templates = rawTemplates ? JSON.parse(rawTemplates) : []; }
+    catch(e){ state.templates = []; }
 
     if(!rawAccounts){ saveAccounts(); }
 
@@ -994,6 +1011,7 @@ optgroup{font-weight:700;}
   }
   function saveAccounts(){ localStorage.setItem(STORAGE_ACCOUNTS, JSON.stringify(state.accounts)); }
   function saveTx(){ localStorage.setItem(STORAGE_TX, JSON.stringify(state.transactions)); }
+  function saveTemplates(){ localStorage.setItem(STORAGE_TEMPLATES, JSON.stringify(state.templates)); }
 
   function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
@@ -1341,12 +1359,111 @@ optgroup{font-weight:700;}
     if(e.target.classList && e.target.classList.contains("line-amount")){ updateLineTotals(); }
   });
 
+  // ---------- 仕訳テンプレート ----------
+  var templateSelect = document.getElementById("f-template");
+
+  // 仕訳入力画面のテンプレート選択プルダウンを作り直す
+  function populateTemplateSelect(){
+    templateSelect.innerHTML = "";
+    var placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = state.templates.length ? "選択してください" : "(まだテンプレートがありません)";
+    templateSelect.appendChild(placeholder);
+    state.templates.forEach(function(t){
+      var opt = document.createElement("option");
+      opt.value = t.id;
+      opt.textContent = t.name;
+      templateSelect.appendChild(opt);
+    });
+  }
+
+  // テンプレートを選んだら、その内容をフォームへ反映する
+  templateSelect.addEventListener("change", function(){
+    var id = templateSelect.value;
+    if(!id) return;
+    var tpl = null;
+    for(var i=0;i<state.templates.length;i++){ if(state.templates[i].id===id){ tpl = state.templates[i]; break; } }
+    if(!tpl) return;
+    debitLinesEl.innerHTML = "";
+    creditLinesEl.innerHTML = "";
+    (tpl.debitLines && tpl.debitLines.length ? tpl.debitLines : [{account:"",amount:""}]).forEach(function(l){
+      addDebitLine(l.account, l.amount);
+    });
+    (tpl.creditLines && tpl.creditLines.length ? tpl.creditLines : [{account:"",amount:""}]).forEach(function(l){
+      addCreditLine(l.account, l.amount);
+    });
+    document.getElementById("f-memo").value = tpl.memo || "";
+    toast("テンプレート「"+tpl.name+"」を呼び出しました");
+  });
+
+  // 今フォームに入力されている内容をテンプレートとして保存する
+  document.getElementById("save-template-btn").addEventListener("click", function(){
+    var debitLines = readLinesFrom(debitLinesEl);
+    var creditLines = readLinesFrom(creditLinesEl);
+    var hasAccount =
+      debitLines.some(function(l){ return l.account; }) &&
+      creditLines.some(function(l){ return l.account; });
+    if(!hasAccount){ toast("借方・貸方の科目を選んでから保存してください"); return; }
+
+    var name = prompt("テンプレートの名前を入力してください(例:給料日、カード引き落とし)");
+    if(name===null) return; // キャンセル
+    name = name.trim();
+    if(!name){ toast("テンプレート名を入力してください"); return; }
+    var dup = state.templates.some(function(t){ return t.name===name; });
+    if(dup){ toast("同じ名前のテンプレートが既にあります"); return; }
+
+    state.templates.push({
+      id: uid(),
+      name: name,
+      debitLines: debitLines,
+      creditLines: creditLines,
+      memo: document.getElementById("f-memo").value.trim()
+    });
+    saveTemplates();
+    populateTemplateSelect();
+    renderTemplateList();
+    toast("テンプレート「"+name+"」を保存しました");
+  });
+
+  // 設定タブのテンプレート一覧(削除ボタン付き)
+  function renderTemplateList(){
+    var wrap = document.getElementById("template-list");
+    wrap.innerHTML = "";
+    if(state.templates.length===0){
+      wrap.innerHTML = "<p class='hint' style='margin:0;'>保存されたテンプレートはまだありません。</p>";
+      return;
+    }
+    state.templates.forEach(function(t){
+      var item = document.createElement("div");
+      item.className = "account-item";
+      item.innerHTML =
+        "<span class='account-name'>"+escapeHtml(t.name)+"</span>"+
+        "<span class='account-actions'><button class='del-link' data-id='"+t.id+"'>削除</button></span>";
+      wrap.appendChild(item);
+    });
+  }
+  document.getElementById("template-list").addEventListener("click", function(e){
+    var btn = e.target.closest(".del-link");
+    if(!btn) return;
+    var id = btn.dataset.id;
+    var tpl = null;
+    for(var i=0;i<state.templates.length;i++){ if(state.templates[i].id===id){ tpl = state.templates[i]; break; } }
+    if(!confirm("テンプレート「"+(tpl?tpl.name:"")+"」を削除しますか?")) return;
+    state.templates = state.templates.filter(function(t){ return t.id!==id; });
+    saveTemplates();
+    populateTemplateSelect();
+    renderTemplateList();
+    toast("テンプレートを削除しました");
+  });
+
   // 新規記帳モードでシートを開く
   function openSheetNew(){
     document.getElementById("f-edit-id").value = "";
     document.getElementById("entry-sheet-title").textContent = "仕訳を入力";
     document.getElementById("entry-submit-btn").textContent = "この仕訳を記帳する";
     document.getElementById("entry-delete-btn").style.display = "none";
+    document.getElementById("template-select-row").style.display = "flex";
+    populateTemplateSelect();
     document.getElementById("f-date").value = todayStr();
     document.getElementById("f-memo").value = "";
     debitLinesEl.innerHTML = "";
@@ -1366,6 +1483,8 @@ optgroup{font-weight:700;}
     document.getElementById("entry-sheet-title").textContent = "仕訳を編集";
     document.getElementById("entry-submit-btn").textContent = "変更を保存する";
     document.getElementById("entry-delete-btn").style.display = "block";
+    // 編集時はテンプレート呼び出しを表示しない(既存の内容を上書きしてしまう誤操作を防ぐため)
+    document.getElementById("template-select-row").style.display = "none";
     document.getElementById("f-date").value = tx.date;
     document.getElementById("f-memo").value = tx.memo || "";
 
@@ -2101,7 +2220,7 @@ optgroup{font-weight:700;}
 
   // ================= 設定:バックアップ =================
   document.getElementById("btn-export").addEventListener("click", function(){
-    var payload = { app:"kakeibo-fukushiki", exportedAt:new Date().toISOString(), accounts:state.accounts, transactions:state.transactions };
+    var payload = { app:"kakeibo-fukushiki", exportedAt:new Date().toISOString(), accounts:state.accounts, transactions:state.transactions, templates:state.templates };
     var blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
     var url = URL.createObjectURL(blob);
     var a = document.createElement("a");
@@ -2126,10 +2245,14 @@ optgroup{font-weight:700;}
       if(!confirm("現在のデータをこのファイルの内容で上書きします。よろしいですか?")) return;
       state.accounts = data.accounts;
       state.transactions = data.transactions;
-      saveAccounts(); saveTx();
+      // 古いバックアップにはテンプレートが入っていないため、その場合は空にする
+      state.templates = Array.isArray(data.templates) ? data.templates : [];
+      saveAccounts(); saveTx(); saveTemplates();
       refreshAllAccountSelects();
       populatePeriodSelectors();
       populateHistAccountSelect();
+      populateTemplateSelect();
+      renderTemplateList();
       updatePlModeVisibility();
       renderAccountList();
       refreshCurrentPage();
@@ -2141,13 +2264,16 @@ optgroup{font-weight:700;}
 
   document.getElementById("btn-reset").addEventListener("click", function(){
     if(!confirm("本当にすべてのデータを削除しますか?この操作は取り消せません。")) return;
-    if(!confirm("最終確認:仕訳・勘定科目をすべて削除して初期状態に戻します。よろしいですか?")) return;
+    if(!confirm("最終確認:仕訳・勘定科目・仕訳テンプレートをすべて削除して初期状態に戻します。よろしいですか?")) return;
     state.accounts = DEFAULT_ACCOUNTS.slice();
     state.transactions = [];
-    saveAccounts(); saveTx();
+    state.templates = [];
+    saveAccounts(); saveTx(); saveTemplates();
     refreshAllAccountSelects();
     populatePeriodSelectors();
     populateHistAccountSelect();
+    populateTemplateSelect();
+    renderTemplateList();
     updatePlModeVisibility();
     renderAccountList();
     refreshCurrentPage();
@@ -2168,6 +2294,8 @@ optgroup{font-weight:700;}
   refreshAllAccountSelects();
   populatePeriodSelectors();
   populateHistAccountSelect();
+  populateTemplateSelect();
+  renderTemplateList();
   updatePlModeVisibility();
   renderHome();
   renderHistory();
