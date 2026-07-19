@@ -15,19 +15,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#FBF6E2;
+  --paper:#F1F7EE;
   --card:#FFFFFF;
-  --yellow-card:#FCE8A6;
-  --yellow-card-2:#FBDF8C;
-  --ink:#3E3623;
-  --ink-soft:#8B7F5E;
-  --line:#EFE6C8;
-  --accent:#F2C744;
-  --accent-dark:#C9971F;
+  --yellow-card:#CDEBC8;
+  --yellow-card-2:#AFDDA6;
+  --ink:#2F4A2E;
+  --ink-soft:#7C947A;
+  --line:#DCEAD7;
+  --accent:#5FBF63;
+  --accent-dark:#3E9142;
   --red:#C4544A;
   --red-soft:#FBE5E2;
-  --shadow:0 4px 16px rgba(62,54,35,0.08);
-  --shadow-lg:0 8px 28px rgba(62,54,35,0.18);
+  --shadow:0 4px 16px rgba(47,74,46,0.08);
+  --shadow-lg:0 8px 28px rgba(47,74,46,0.18);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{margin:0;padding:0;}
@@ -111,7 +111,7 @@ button{font-family:inherit;}
 }
 .balance-label{
   font-size:13px;
-  color:#7A5E10;
+  color:#35682F;
   font-weight:700;
   text-align:center;
   margin-bottom:6px;
@@ -120,7 +120,7 @@ button{font-family:inherit;}
   font-size:32px;
   font-weight:900;
   text-align:center;
-  color:#3E2F08;
+  color:#234B22;
   margin-bottom:14px;
 }
 .balance-bar-track{
@@ -132,7 +132,7 @@ button{font-family:inherit;}
 }
 .balance-bar-fill{
   height:100%;
-  background:#B9860A;
+  background:#E3A93B;
   border-radius:20px;
   width:0%;
   transition:width .3s ease;
@@ -145,8 +145,8 @@ button{font-family:inherit;}
   overflow:hidden;
 }
 .stat-pair > div{flex:1;padding:12px 8px;text-align:center;}
-.stat-pair > div + div{border-left:1px solid rgba(122,94,16,0.18);}
-.stat-pair .stat-label{font-size:12px;color:#7A5E10;font-weight:700;margin-bottom:4px;}
+.stat-pair > div + div{border-left:1px solid rgba(53,104,47,0.18);}
+.stat-pair .stat-label{font-size:12px;color:#35682F;font-weight:700;margin-bottom:4px;}
 .stat-pair .stat-value{font-size:17px;font-weight:700;}
 .stat-value.expense{color:var(--red);}
 .stat-value.income{color:var(--ink);}
@@ -212,9 +212,13 @@ button{font-family:inherit;}
 .tx-icon{
   width:38px;height:38px;flex:0 0 38px;
   border-radius:50%;
-  background:#FBF3D6;
+  background:#E4F1E0;
   display:flex;align-items:center;justify-content:center;
-  font-size:18px;
+}
+.tx-icon svg{
+  width:20px;height:20px;
+  stroke:#3E9142;stroke-width:1.7;fill:none;
+  stroke-linecap:round;stroke-linejoin:round;
 }
 .tx-main{flex:1;min-width:0;}
 .tx-title{font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -225,7 +229,7 @@ button{font-family:inherit;}
 .tx-amount.transfer{color:var(--ink-soft);}
 /* タップで編集できる行 */
 .tx-row-editable{cursor:pointer;}
-.tx-row-editable:active{background:rgba(242,199,68,0.14);}
+.tx-row-editable:active{background:rgba(95,191,99,0.14);}
 .tx-edit-chevron{
   flex:0 0 auto;
   color:var(--ink-soft);
@@ -288,7 +292,7 @@ input[type="text"], input[type="date"], input[type="number"], input[type="tel"],
   padding:11px 12px;
   border:1.5px solid var(--line);
   border-radius:10px;
-  background:#FFFDF6;
+  background:#FBFDFA;
   color:var(--ink);
   width:100%;
   min-width:0;
@@ -315,7 +319,7 @@ input[type="date"]::-webkit-date-and-time-value{
 /* プルダウンは矢印マークを自前で表示し、日付欄と高さを揃える */
 select{
   height:44px;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23C9971F' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%233E9142' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat:no-repeat;
   background-position:right 14px center;
   padding-right:34px;
@@ -323,7 +327,7 @@ select{
 input:focus, select:focus, textarea:focus{
   outline:none;
   border-color:var(--accent-dark);
-  box-shadow:0 0 0 3px rgba(242,199,68,0.3);
+  box-shadow:0 0 0 3px rgba(95,191,99,0.3);
 }
 optgroup{font-weight:700;}
 
@@ -332,12 +336,12 @@ optgroup{font-weight:700;}
   padding:13px 18px;border-radius:12px;
   border:none;
   background:var(--accent);
-  color:#4A3410;
+  color:#1F4520;
   cursor:pointer;
   width:100%;
 }
 .btn:active{transform:scale(0.98);}
-.btn.secondary{background:#FBF3D6;color:var(--ink);}
+.btn.secondary{background:#E4F1E0;color:var(--ink);}
 .btn.danger{background:var(--red-soft);color:var(--red);}
 .hint{font-size:12px;color:var(--ink-soft);line-height:1.6;}
 .app-version-label{
@@ -348,7 +352,7 @@ optgroup{font-weight:700;}
   margin:4px 16px 20px;
   font-family:'Space Mono', monospace;
 }
-.balance-check{margin-top:10px;font-size:12.5px;padding:9px 11px;border-radius:8px;background:#EAF2E4;color:#4E7345;}
+.balance-check{margin-top:10px;font-size:12.5px;padding:9px 11px;border-radius:8px;background:#E3F2DF;color:#4E7345;}
 
 /* ===== Filter row (分析タブ) ===== */
 .filter-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;}
@@ -361,14 +365,14 @@ optgroup{font-weight:700;}
 }
 
 .stmt-row{display:flex;justify-content:space-between;padding:8px 2px;border-bottom:1px dashed var(--line);font-size:14px;}
-.stmt-total{display:flex;justify-content:space-between;padding:10px 12px;margin-top:6px;border-radius:10px;font-weight:700;font-size:15px;background:#FBF3D6;}
-.stmt-col h3{font-size:14px;margin:14px 0 6px;color:#7A5E10;}
+.stmt-total{display:flex;justify-content:space-between;padding:10px 12px;margin-top:6px;border-radius:10px;font-weight:700;font-size:15px;background:#E4F1E0;}
+.stmt-col h3{font-size:14px;margin:14px 0 6px;color:#35682F;}
 .stmt-col:first-child h3{margin-top:0;}
 .profit-plus{color:#4E7345;}
 .profit-minus{color:var(--red);}
 
 .segmented{
-  display:flex;background:#F3E9C4;border-radius:12px;padding:3px;margin:0 16px 16px;
+  display:flex;background:#DDEDD7;border-radius:12px;padding:3px;margin:0 16px 16px;
 }
 .segmented button{
   flex:1;border:none;background:transparent;padding:9px 8px;border-radius:10px;
@@ -377,7 +381,7 @@ optgroup{font-weight:700;}
 .segmented button.active{background:var(--card);color:var(--ink);box-shadow:var(--shadow);}
 
 .summary-total-box{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
-.stat-box{flex:1 1 100px;background:#FFFDF6;border:1.5px solid var(--line);border-radius:10px;padding:10px 8px;text-align:center;}
+.stat-box{flex:1 1 100px;background:#FBFDFA;border:1.5px solid var(--line);border-radius:10px;padding:10px 8px;text-align:center;}
 .stat-box .label{font-size:11.5px;color:var(--ink-soft);}
 .stat-box .val{font-size:16px;font-weight:700;margin-top:3px;}
 
@@ -388,7 +392,7 @@ optgroup{font-weight:700;}
   padding:10px 2px 2px;
 }
 .account-group-heading:first-child{padding-top:0;}
-.account-item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 11px;background:#FFFDF6;border:1px solid var(--line);border-radius:8px;font-size:13.5px;}
+.account-item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 11px;background:#FBFDFA;border:1px solid var(--line);border-radius:8px;font-size:13.5px;}
 .account-item .account-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .reorder-btns{display:flex;flex-direction:column;gap:1px;flex:0 0 auto;}
 .reorder-btn{
@@ -408,7 +412,7 @@ optgroup{font-weight:700;}
 .bottombar{
   position:fixed;left:0;right:0;bottom:0;
   background:var(--card);
-  box-shadow:0 -4px 18px rgba(62,54,35,0.10);
+  box-shadow:0 -4px 18px rgba(47,74,46,0.10);
   display:flex;
   justify-content:center;
   padding:8px 4px calc(8px + env(safe-area-inset-bottom));
@@ -426,7 +430,7 @@ optgroup{font-weight:700;}
   font-size:10.5px;color:var(--ink-soft);font-weight:700;
   padding:6px 2px;cursor:pointer;
 }
-.nav-btn .ic{font-size:19px;}
+.nav-btn svg{width:22px;height:22px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;}
 .nav-btn.active{color:var(--accent-dark);}
 
 .fab{
@@ -436,8 +440,8 @@ optgroup{font-weight:700;}
   transform:translateX(-50%);
   width:58px;height:58px;
   border-radius:50%;
-  background:var(--accent);
-  color:#4A3410;
+  background:#F5C542;
+  color:#5A4508;
   border:4px solid var(--paper);
   font-size:28px;
   font-weight:400;
@@ -471,7 +475,7 @@ optgroup{font-weight:700;}
 .sheet-handle{width:40px;height:4px;background:var(--line);border-radius:4px;margin:6px auto 12px;}
 .sheet-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
 .sheet-header h2{font-size:16px;margin:0;font-weight:700;}
-.sheet-close{border:none;background:#FBF3D6;color:var(--ink);width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;}
+.sheet-close{border:none;background:#E4F1E0;color:var(--ink);width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;}
 
 /* ===== 借方・貸方の複数行入力 ===== */
 .line-section{margin-bottom:14px;}
@@ -532,14 +536,14 @@ optgroup{font-weight:700;}
 .calc-btn{
   height:52px;
   border:none;border-radius:12px;
-  background:#FFFDF6;
+  background:#FBFDFA;
   border:1.5px solid var(--line);
   font-size:19px;font-weight:700;color:var(--ink);
   cursor:pointer;
 }
-.calc-btn:active{background:#FBE9AE;}
-.calc-btn.calc-fn{color:var(--ink-soft);font-size:15px;background:#F3ECD3;}
-.calc-btn.calc-op{background:#FBF3D6;color:#7A5E10;}
+.calc-btn:active{background:#CBE8C4;}
+.calc-btn.calc-fn{color:var(--ink-soft);font-size:15px;background:#E9F3E5;}
+.calc-btn.calc-op{background:#E4F1E0;color:#35682F;}
 .calc-btn.calc-doublezero{grid-column:span 2;}
 .calc-btn.calc-eq{grid-row:span 2;height:auto;background:var(--accent-dark);color:#fff;font-size:22px;}
 /* 決定バー:画像と同じく画面幅いっぱいの帯状ボタンとして、パネル下端に配置する */
@@ -551,7 +555,7 @@ optgroup{font-weight:700;}
   border:none;
   border-radius:0;
   background:var(--accent);
-  color:#4A3410;
+  color:#1F4520;
   font-size:16px;font-weight:700;
   cursor:pointer;
 }
@@ -817,10 +821,10 @@ optgroup{font-weight:700;}
   <!-- ===================== 下部ナビ + 追加ボタン ===================== -->
   <nav class="bottombar">
     <div class="bottombar-inner">
-      <button class="nav-btn active" data-page="home"><span class="ic">🏠</span><span>ホーム</span></button>
-      <button class="nav-btn" data-page="history"><span class="ic">🕘</span><span>履歴</span></button>
-      <button class="nav-btn" data-page="analysis"><span class="ic">📊</span><span>分析</span></button>
-      <button class="nav-btn" data-page="settings"><span class="ic">⚙️</span><span>設定</span></button>
+      <button class="nav-btn active" data-page="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7"/><path d="M6.5 10v9.5h11V10"/><path d="M10 19.5v-5h4v5"/></svg><span>ホーム</span></button>
+      <button class="nav-btn" data-page="history"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.3"/><path d="M12 7.2v4.8l3.2 2"/></svg><span>履歴</span></button>
+      <button class="nav-btn" data-page="analysis"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 20h15"/><path d="M7 17v-5M12 17V7.5M17 17v-7"/></svg><span>分析</span></button>
+      <button class="nav-btn" data-page="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 7.5h15M4.5 12h15M4.5 16.5h15"/><circle cx="9.5" cy="7.5" r="1.9"/><circle cx="14.5" cy="12" r="1.9"/><circle cx="8.5" cy="16.5" r="1.9"/></svg><span>設定</span></button>
     </div>
   </nav>
   <button class="fab" id="fab-add" aria-label="仕訳を追加">+</button>
@@ -936,7 +940,7 @@ optgroup{font-weight:700;}
   var STORAGE_TEMPLATES = "kakeibo_templates_v1";
   // ファイルを差し替えたとき、反映されているかご自身で確認するためのバージョン表示
   // (新しいファイルをお渡しするたびに、この日付・番号を更新します)
-  var APP_VERSION = "2026-07-07.5";
+  var APP_VERSION = "2026-07-19.1";
 
   var TYPE_LABEL = { asset:"資産", liability:"負債", equity:"純資産", revenue:"収益", expense:"費用" };
   var DEBIT_NORMAL = { asset:true, expense:true, liability:false, equity:false, revenue:false };
@@ -960,14 +964,39 @@ optgroup{font-weight:700;}
     {id:"other_expense", name:"その他支出", type:"expense"}
   ];
 
-  var ICONS = {
-    cash:"👛", bank:"🏦", credit_card:"💳", capital:"🌱",
-    salary:"💰", other_income:"✨",
-    food:"🍴", housing:"🏠", utilities:"💡", communication:"📱",
-    transport:"🚃", daily_goods:"🧺", medical:"🩺", clothing:"👗",
-    entertainment:"🎬", other_expense:"📦"
+  // 専用アイコン(線画SVG)。絵文字ではなく、アプリのデザインに合わせて描いた図形データ
+  function svgWrap(inner){ return '<svg viewBox="0 0 24 24" aria-hidden="true">' + inner + '</svg>'; }
+  var SVGI = {
+    wallet: svgWrap('<rect x="3" y="6.5" width="18" height="12.5" rx="2.5"/><path d="M3 10.5h18"/><circle cx="16.8" cy="14.8" r="1.1"/>'),
+    bank: svgWrap('<path d="M12 3.5L20.5 9h-17z"/><path d="M5.5 9v8M9.8 9v8M14.2 9v8M18.5 9v8M4 17h16M3.5 20h17"/>'),
+    card: svgWrap('<rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3 9.5h18M6.5 15h4.5"/>'),
+    sprout: svgWrap('<path d="M12 20.5v-7.5"/><path d="M12 13c0-3.6 2.6-6.2 6.3-6.2-.2 3.7-2.7 6.2-6.3 6.2z"/><path d="M12 15.5c0-2.9-2.1-5-5.1-5 .2 3 2.1 5 5.1 5z"/>'),
+    coin: svgWrap('<circle cx="12" cy="12" r="8.3"/><path d="M9.2 8l2.8 3.8L14.8 8M12 11.8v4.7M9.7 13.4h4.6M9.7 15.8h4.6"/>'),
+    sparkle: svgWrap('<path d="M12 4.5l1.7 4.3 4.3 1.7-4.3 1.7L12 16.5l-1.7-4.3L6 10.5l4.3-1.7z"/><path d="M18.3 15.8l.6 1.6 1.6.6-1.6.6-.6 1.6-.6-1.6-1.6-.6 1.6-.6z"/>'),
+    food: svgWrap('<path d="M7 4v6.5M9.5 4v6.5M7 8h2.5M8.2 10.5V20"/><path d="M15.5 4v16M15.5 4c2.2.8 2.2 5 0 5.8"/>'),
+    house: svgWrap('<path d="M4 11l8-7 8 7"/><path d="M6.5 10v9.5h11V10"/><path d="M10 19.5v-5h4v5"/>'),
+    bulb: svgWrap('<path d="M9.2 17.5h5.6M10.2 20.5h3.6"/><path d="M12 3.2a5.8 5.8 0 0 1 3.4 10.5c-.7.5-1 1.2-1 2h-4.8c0-.8-.3-1.5-1-2A5.8 5.8 0 0 1 12 3.2z"/>'),
+    phone: svgWrap('<rect x="7" y="3" width="10" height="18" rx="2.4"/><path d="M10.8 17.8h2.4"/>'),
+    bus: svgWrap('<rect x="4.8" y="4" width="14.4" height="13" rx="2.4"/><path d="M4.8 9.8h14.4"/><circle cx="8.6" cy="14" r="1.1"/><circle cx="15.4" cy="14" r="1.1"/><path d="M7.5 17v2.6M16.5 17v2.6"/>'),
+    basket: svgWrap('<path d="M4.5 10h15l-1.5 8.6a1.6 1.6 0 0 1-1.6 1.4H7.6A1.6 1.6 0 0 1 6 18.6z"/><path d="M8.8 10L12 4.6 15.2 10"/><path d="M9.7 13v3.8M12 13v3.8M14.3 13v3.8"/>'),
+    medical: svgWrap('<circle cx="12" cy="12" r="8.3"/><path d="M12 8.4v7.2M8.4 12h7.2"/>'),
+    shirt: svgWrap('<path d="M8.4 4.2L4 7.6l1.9 2.8 2-1.3V20h8.2V9.1l2 1.3 1.9-2.8-4.4-3.4A3.6 3.6 0 0 1 12 6a3.6 3.6 0 0 1-3.6-1.8z"/>'),
+    film: svgWrap('<rect x="4" y="4.8" width="16" height="14.4" rx="2"/><path d="M4 9h16M8.5 4.8V9M15.5 4.8V9"/><path d="M10.3 12.2l3.8 2.3-3.8 2.3z"/>'),
+    box: svgWrap('<path d="M4 8.2l8-4 8 4v7.6l-8 4-8-4z"/><path d="M4 8.2l8 4 8-4M12 12.2v7.6"/>'),
+    transfer: svgWrap('<path d="M6.5 8.5H17l-2.6-2.6M17.5 15.5H7l2.6 2.6"/>'),
+    receipt: svgWrap('<path d="M6.5 3.5h11V20l-1.9-1.3L13.8 20l-1.8-1.3L10.2 20l-1.9-1.3L6.5 20z"/><path d="M9.3 8h5.4M9.3 11.3h5.4M9.3 14.6h3.6"/>'),
+    briefcase: svgWrap('<rect x="3.8" y="7.6" width="16.4" height="11.4" rx="2"/><path d="M9.2 7.6V6.2A1.7 1.7 0 0 1 10.9 4.5h2.2a1.7 1.7 0 0 1 1.7 1.7v1.4M3.8 12.2h16.4"/>'),
+    book: svgWrap('<path d="M5.5 4.5H16a2 2 0 0 1 2 2V19.5H7.5a2 2 0 0 1-2-2z"/><path d="M18 16H7.5a2 2 0 0 0-2 2"/>'),
+    chartUp: svgWrap('<path d="M4.5 19.5h15"/><path d="M6 16l4.2-4.2 3 2.6 4.8-5.4"/><path d="M18 12V9h-3"/>')
   };
-  var TYPE_ICON_FALLBACK = { asset:"💼", liability:"📇", equity:"📘", revenue:"💹", expense:"🧾" };
+  var ICONS = {
+    cash:SVGI.wallet, bank:SVGI.bank, credit_card:SVGI.card, capital:SVGI.sprout,
+    salary:SVGI.coin, other_income:SVGI.sparkle,
+    food:SVGI.food, housing:SVGI.house, utilities:SVGI.bulb, communication:SVGI.phone,
+    transport:SVGI.bus, daily_goods:SVGI.basket, medical:SVGI.medical, clothing:SVGI.shirt,
+    entertainment:SVGI.film, other_expense:SVGI.box
+  };
+  var TYPE_ICON_FALLBACK = { asset:SVGI.briefcase, liability:SVGI.card, equity:SVGI.book, revenue:SVGI.chartUp, expense:SVGI.receipt };
   var WEEKDAY = ["日","月","火","水","木","金","土"];
 
   var state = { accounts: [], transactions: [], templates: [] };
@@ -1052,9 +1081,9 @@ optgroup{font-weight:700;}
     toast._t = setTimeout(function(){ el.classList.remove("show"); }, 2200);
   }
   function iconFor(account){
-    if(!account) return "🔁";
+    if(!account) return SVGI.transfer;
     if(ICONS[account.id]) return ICONS[account.id];
-    return TYPE_ICON_FALLBACK[account.type] || "🔘";
+    return TYPE_ICON_FALLBACK[account.type] || SVGI.box;
   }
   // 1つの仕訳(複数行の場合も含む)を「支出」「収入」「振替」に分類し、
   // 一覧表示用のアイコン・タイトル・金額をまとめる
@@ -1083,7 +1112,7 @@ optgroup{font-weight:700;}
       if(c && c.type==="revenue"){
         return {kind:"income", icon:iconFor(c), title:c.name, amount:creditTotal};
       }
-      return {kind:"transfer", icon:"🔁", title:(d?d.name:"(削除済)")+"／"+(c?c.name:"(削除済)"), amount:debitTotal};
+      return {kind:"transfer", icon:SVGI.transfer, title:(d?d.name:"(削除済)")+"／"+(c?c.name:"(削除済)"), amount:debitTotal};
     }
 
     // 借方・貸方のどちらかが複数行ある「分割仕訳」の場合
@@ -1097,12 +1126,12 @@ optgroup{font-weight:700;}
     }, 0);
 
     if(expenseSum>0 && expenseSum===debitTotal && incomeSum===0){
-      return {kind:"expense", icon:"🧾", title:accountNames(debitLines), amount:debitTotal};
+      return {kind:"expense", icon:SVGI.receipt, title:accountNames(debitLines), amount:debitTotal};
     }
     if(incomeSum>0 && incomeSum===creditTotal && expenseSum===0){
-      return {kind:"income", icon:"🧾", title:accountNames(creditLines), amount:creditTotal};
+      return {kind:"income", icon:SVGI.receipt, title:accountNames(creditLines), amount:creditTotal};
     }
-    return {kind:"transfer", icon:"🔁", title:accountNames(debitLines)+"／"+accountNames(creditLines), amount:debitTotal};
+    return {kind:"transfer", icon:SVGI.transfer, title:accountNames(debitLines)+"／"+accountNames(creditLines), amount:debitTotal};
   }
 
   // ---------- balance calculation ----------
@@ -1344,10 +1373,10 @@ optgroup{font-weight:700;}
     var checkEl = document.getElementById("entry-balance-check");
     if(debitTotal===0 && creditTotal===0){
       checkEl.textContent = "借方・貸方それぞれの科目と金額を入力してください。";
-      checkEl.style.background = "#F3ECD3"; checkEl.style.color = "var(--ink-soft)";
+      checkEl.style.background = "#E9F3E5"; checkEl.style.color = "var(--ink-soft)";
     }else if(debitTotal===creditTotal){
       checkEl.textContent = "貸借一致:借方合計と貸方合計が一致しています。";
-      checkEl.style.background = "#EAF2E4"; checkEl.style.color = "#4E7345";
+      checkEl.style.background = "#E3F2DF"; checkEl.style.color = "#4E7345";
     }else{
       // 金額が少ない側と、あといくら不足しているかを示す
       var shortSide = debitTotal < creditTotal ? "借方" : "貸方";
@@ -1688,7 +1717,7 @@ optgroup{font-weight:700;}
     var pct = income>0 ? Math.min(100, (expense/income)*100) : (expense>0 ? 100 : 0);
     var fill = document.getElementById("home-bar-fill");
     fill.style.width = pct + "%";
-    fill.style.background = balance>=0 ? "#B9860A" : "#C4544A";
+    fill.style.background = balance>=0 ? "#E3A93B" : "#C4544A";
 
     // グラフ2種を描画(その月のデータを使う)
     drawWeeklyChart(monthTx);
@@ -1765,7 +1794,7 @@ optgroup{font-weight:700;}
     weeks.forEach(function(w){ if(w.value>maxVal) maxVal=w.value; });
 
     if(maxVal===0){
-      ctx.fillStyle = "#B7A97F";
+      ctx.fillStyle = "#93B291";
       ctx.font = "13px sans-serif";
       ctx.textAlign = "center";
       ctx.fillText("この月の支出はまだありません", cssW/2, cssH/2);
@@ -1778,7 +1807,7 @@ optgroup{font-weight:700;}
     var n = weeks.length;
     var gap = 10;
     var barW = (chartW - gap*(n-1)) / n;
-    var colors = ["#F2C744","#E9B84A","#DCA94F","#CF9A54"];
+    var colors = ["#6BC46D","#58B45D","#49A250","#3E9142"];
 
     weeks.forEach(function(w, i){
       var x = padL + i*(barW+gap);
@@ -1789,7 +1818,7 @@ optgroup{font-weight:700;}
       roundRectPath(ctx, x, y, barW, h, 6);
       ctx.fill();
       // 週ラベル
-      ctx.fillStyle = "#8B7F5E";
+      ctx.fillStyle = "#7C947A";
       ctx.font = "10px sans-serif";
       ctx.textAlign = "center";
       ctx.fillText(w.label, x + barW/2, cssH - 8);
@@ -1812,7 +1841,7 @@ optgroup{font-weight:700;}
   }
 
   // 支出内訳:費用科目ごとに集計してドーナツ円グラフ+凡例
-  var DONUT_COLORS = ["#F2C744","#E48F6A","#7FB3D5","#88C999","#B39DDB","#F6A5C0","#F0C05A","#9FD8CB","#E0A96D","#C9C15A","#8DA9C4","#D98880"];
+  var DONUT_COLORS = ["#5FBF63","#E48F6A","#7FB3D5","#88C999","#B39DDB","#F6A5C0","#F5C542","#9FD8CB","#E0A96D","#C9C15A","#8DA9C4","#D98880"];
 
   function drawDonutChart(monthTx){
     var canvas = document.getElementById("donut-chart");
@@ -1843,7 +1872,7 @@ optgroup{font-weight:700;}
       ctx.beginPath();
       ctx.arc(cx, cy, rOut, 0, Math.PI*2);
       ctx.arc(cx, cy, rIn, 0, Math.PI*2, true);
-      ctx.fillStyle = "#F1E9CC";
+      ctx.fillStyle = "#E3F0DF";
       ctx.fill("evenodd");
       legendEl.innerHTML = "<div class='chart-empty'>この月の支出はまだありません</div>";
       return;
@@ -1867,7 +1896,7 @@ optgroup{font-weight:700;}
     ctx.fillStyle = "#FFFFFF";
     ctx.fill();
     // 中央に合計
-    ctx.fillStyle = "#3E3623";
+    ctx.fillStyle = "#2F4A2E";
     ctx.font = "bold 15px 'Space Mono', monospace";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -1888,7 +1917,7 @@ optgroup{font-weight:700;}
     if(restSum>0){
       var pctRest = Math.round((restSum/total)*100);
       html += "<div class='legend-item'>"+
-        "<span class='legend-dot' style='background:#C9C0A6'></span>"+
+        "<span class='legend-dot' style='background:#A9C4A6'></span>"+
         "<span class='legend-name'>その他</span>"+
         "<span class='legend-val'>"+pctRest+"%</span></div>";
     }
@@ -2043,7 +2072,7 @@ optgroup{font-weight:700;}
     var checkEl = document.getElementById("bs-check");
     if(Math.abs(diff) < 1){
       checkEl.textContent = "貸借一致:資産合計と負債・純資産合計が一致しています。";
-      checkEl.style.background = "#EAF2E4"; checkEl.style.color = "#4E7345";
+      checkEl.style.background = "#E3F2DF"; checkEl.style.color = "#4E7345";
     }else{
       checkEl.textContent = "警告:貸借が一致していません(差額 " + fmtYen(diff) + ")。仕訳内容をご確認ください。";
       checkEl.style.background = "#FBE5E2"; checkEl.style.color = "var(--red)";
